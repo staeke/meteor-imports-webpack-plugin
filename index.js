@@ -6,7 +6,7 @@ function MeteorImportsPlugin(config) {
     'autoupdate',
     'global-imports',
     'hot-code-push',
-    'reaload',
+    'reload',
   ].concat(config.EXCLUDE || []);
   this.config = config;
 }
@@ -26,7 +26,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     try {
       fs.accessSync(meteorBuild + '/program.json', fs.F_OK);
     } catch (e) {
-      throw Error('Run your Meteor server at least once.')
+      throw Error('Run Meteor at least once.')
     }
 
     // Create an alias so we can do the context properly using the folder
