@@ -251,6 +251,8 @@ Webpack is a powerful but complex tool, with a non-friendly API, so reading code
 - [ES2015 imports in Wepack with Meteor 1.3 rc2 server]()
 - [ES2015 imports in Wepack with React, HMR and Meteor 1.3 rc2 server]()
 
+The default Meteor bundle (without any external package, jQuery or Blaze) is 70Kb gzipped.
+
 ## Caveats
 
 - **Dev servers**: if you add or remove Meteor packages, you have to restart your dev servers, both Webpack and Meteor.
