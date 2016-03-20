@@ -8,13 +8,13 @@ var req = require.context(
   'meteor-packages', false, /\.js$/);
 
 // Create regexp to exclude the packages we don't want.
-var excluded = new RegExp(config.EXCLUDE
+var excluded = new RegExp(config.exclude
   .map(function(exclude){ return '^packages/' + exclude + '.js$'; })
   .concat('^app\/.+.js$')
   .join('|'));
 
 // Require the Meteor packages.
-manifest.forEach(function(package){
-  if (!excluded.test(package.path))
-    req('./' + package.path.replace('packages/', ''));
+manifest.forEach(function(pckge){
+  if (!excluded.test(pckge.path))
+    req('./' + pckge.path.replace('packages/', ''));
 });

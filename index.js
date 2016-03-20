@@ -1,12 +1,12 @@
 var path = require('path');
 
 function MeteorImportsPlugin(config) {
-  config.EXCLUDE = [
+  config.exclude = [
     'autoupdate',
     'global-imports',
     'hot-code-push',
     'reload',
-  ].concat(config.EXCLUDE || []);
+  ].concat(config.exclude || []);
   this.config = config;
 }
 
@@ -16,7 +16,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
   compiler.plugin("compile", function(params) {
     // Create path for internal build of the meteor packages.
     var meteorBuild = path.join(
-      params.normalModuleFactory.context, self.config.METEOR_FOLDER,
+      params.normalModuleFactory.context, self.config.meteorFolder,
       '.meteor', 'local', 'build', 'programs', 'web.browser'
     );
 
@@ -65,20 +65,19 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
     // Create an alias for each Meteor packages and a loader to extract its
     // globals.
-    var excluded = new RegExp(self.config.EXCLUDE
-      .map(function(exclude){ return '^packages/' + exclude + '.js$'; })
+    var excluded = new RegExp(self.config.exclude
+      .map(function(exclude){ return '^packages/' + exclude + '\.js$'; })
       .concat('^app\/.+.js$')
       .join('|'));
-    manifest.forEach(function(package){
-      if (!excluded.test(package.path)) {
-        var packageName = /^packages\/(.+)\.js$/.exec(package.path)[1];
+    manifest.forEach(function(pckge){
+      if (!excluded.test(pckge.path)) {
+        var packageName = /^packages\/(.+)\.js$/.exec(pckge.path)[1];
         compiler.options.resolve.alias['meteor/' + packageName] =
-          meteorBuild + '/' + package.path;
+          meteorBuild + '/' + pckge.path;
         compiler.options.module.loaders.push({
-          test: new RegExp('.meteor/local/build/programs/web.browser/' + package.path),
+          test: new RegExp('.meteor/local/build/programs/web.browser/' + pckge.path),
           loader: 'exports?Package["' + packageName + '"]'
         })
-        debugger;
       }
     });
 
@@ -86,9 +85,13 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
   // Don't create modules and chunks for excluded packages.
   compiler.plugin("normal-module-factory", function(nmf) {
+    var excluded = new RegExp(self.config.exclude
+      .map(function(exclude) { return '^\./' + exclude + '\.js$' })
+      .join('|'));
 		nmf.plugin("before-resolve", function(result, callback) {
 			if(!result) return callback();
-			if(new RegExp(self.config.EXCLUDE.join('|')).test(result.request)){
+      debugger;
+			if(excluded.test(result.request)){
 				return callback();
 			}
 			return callback(null, result);
