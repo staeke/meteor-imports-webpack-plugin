@@ -91,7 +91,7 @@ And finally, **include this import line** in your client entry point.
 require('meteor-imports'); // or import 'meteor-imports';
 ```
 
-#### config
+## Configuration
 
 The `config` object passed to the plugin must contain at least these properties:
 
@@ -192,7 +192,7 @@ import { check, Match } from 'meteor/check';
 
 ## How to add (or remove) a Meteor package
 
-First, go to your Meteor folder and (or remove) the package.
+First, go to your Meteor folder and add (or remove) the package.
 
 ```bash
 cd server
@@ -228,7 +228,7 @@ Use a low dash (`_`) instead of a colon (`:`) before the package author name, ju
 
 ## Vendor chunks
 
-If you want to use the commonChunks plugin to create a separate vendor chunk and want to include meteor in it, use `'meteor-imports'`:
+If you want to use the commonChunks plugin to create a separate vendor chunk and include meteor in it, use `'meteor-imports'`:
 
 ```javascript
 module.exports = {
@@ -243,6 +243,8 @@ module.exports = {
 };
 ```
 
+The default Meteor bundle (without any external package, jQuery or Blaze) is 70Kb gzipped.
+
 ## Examples
 
 Webpack is a powerful but complex tool, with a non-friendly API, so reading code from examples is usually a great way to get you started.
@@ -250,8 +252,6 @@ Webpack is a powerful but complex tool, with a non-friendly API, so reading code
 - [ES5 imports in Wepack with Meteor 1.2 server]()
 - [ES2015 imports in Wepack with Meteor 1.3 rc2 server]()
 - [ES2015 imports in Wepack with React, HMR and Meteor 1.3 rc2 server]()
-
-The default Meteor bundle (without any external package, jQuery or Blaze) is 70Kb gzipped.
 
 ## Caveats
 
