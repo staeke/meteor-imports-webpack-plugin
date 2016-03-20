@@ -33,6 +33,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // variable from the meteor config file. If we inject the folder variable
     // directly in the request.context webpack goes wild.
     compiler.options.resolve.alias['meteor-build'] = meteorBuild;
+    compiler.options.resolve.alias['meteor'] = meteorBuild + '/packages';
 
     // Create an alias for the meteor-init script.
     compiler.options.resolve.alias['meteor-imports'] = path.join(

@@ -5,7 +5,7 @@ __meteor_runtime_config__ = config;
 
 // Create context to create a chunk for each Meteor package.
 var req = require.context(
-  'imports?this=>window!exports?Package!meteor-build', true, /\.js$/);
+  'imports?this=>window!exports?Package!meteor', false, /\.js$/);
 
 // Require the Meteor packages.
 var excluded = new RegExp(config.EXCLUDE
