@@ -273,17 +273,32 @@ The default Meteor bundle (without any external package, jQuery or Blaze) is 70K
 Webpack is a powerful but complex tool, with a non-friendly API, so reading code from examples is usually a great way to get you started.
 
 - [ES5 imports in Wepack with Meteor 1.2 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es5-meteor1.2)
-- [ES2015 imports in Wepack with Meteor 1.3 rc2 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3)
-- [ES2015 imports in Wepack with React, HMR and Meteor 1.3 rc2 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3-react)
+- [ES2015 imports in Wepack with Meteor 1.3 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3)
+- [ES2015 imports in Wepack with React, HMR and Meteor 1.3 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3-react)
 
-## Caveats
+## The bad things
 
 - **Dev servers**: if you add or remove Meteor packages, you have to restart your dev servers, both Webpack and Meteor.
 - **Non used Meteor packages**: when you do `import 'meteor-imports'` all the meteor code is included in your bundle. If you are not using a package, is not enough to just not import it, you have to remove it from meteor: `meteor remove some:package`. This is not new, it's the way Meteor works.
-- **Blaze**: it doesn't work because Blaze requires a spacebars transpiler to convert the html templates into javascript. I am sure a Webpack loader could be created for this, but anyway I recommend you to switch to React (from npm).
+- **Blaze**: it doesn't work because Blaze requires a spacebars transpiler to convert the html templates into javascript. I am sure a Webpack loader could be created for this, but anyway I recommend you to switch to React (from npm). If you want to try, I suggest you start with the [spacebars compiler](https://github.com/eface2face/meteor-spacebars-compiler) created (and used) by Sergio García (@murillo128).
 - **Blaze related packages**: for the obvious same reasons, these don't work either.
 - **Hot Code Push**: for development you don't need it because the Webpack's Hot Module Replacement is more convenient, but you won't have it for production either. I am sure it won't be hard to make it work so if you need it go ahead: I will accept the PR :)
 - **Cordova**: Meteor cordova doesn't work but real [Cordova](http://cordova.apache.org/) does. The commands are pretty similar so don't worry.
 - **Cordova Hot Code Push**: same here, but don't worry, you can use the excellent [CodePush](http://microsoft.github.io/code-push/) project from Microsoft.
 
 Nothing else as far as I know.
+
+## The good things
+
+- **React Native**: I haven't tested it yet, but I don't see any reason you couldn't use this plugin to import Meteor packages in a React Native project. That means, you can work with the real Meteor tools. No more 3rd party ddpclient libraries!
+- **No need for a separate Meteor fork**: I have seen other projects bringing Meteor to NPM but they fork and modify the real Meteor libraries, and therefore, they have to maintain separate codebases.
+- **Atmosphere compatibility**: Same here, forked-projects don't work with any Meteor package out of the box. This plugin does.
+- **Alternative core packages**: Until now, using a non-official core package was really difficult. With this plugin, we can create alternative core packages and substitute the official ones. For example, we could create a new Tracker package but based on [Mobx](http://mobxjs.github.io/mobx/) a superior TRP library. The API for this is not writen yet but it should be fairly easy. Open an issue if you are interested.
+
+## Collaboration
+
+Open issues and do PR's. You can ask for things but [don't be rude](http://hueniverse.com/2016/01/26/how-to-use-open-source-and-shut-the-fuck-up-at-the-same-time/).
+
+## License
+
+MIT.
