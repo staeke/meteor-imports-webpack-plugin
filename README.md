@@ -50,12 +50,6 @@ cd server
 meteor remove insecure autopublish blaze-html-templates session jquery
 ```
 
-You don't need `ecmascript` either, as you will be using Webpack.
-
-```
-meteor remove ecmascript
-```
-
 Add the Meteor packages you want to use.
 
 ```bash
@@ -168,7 +162,7 @@ This is useful only for the core packages. If you don't to use a Meteor package 
 By default, these core packages are excluded: `'autoupdate',
 'global-imports',
 'hot-code-push',
-'reload'` beucase they are useless in Webpack.
+'reload', 'ecmascript'` beucase they are useless in Webpack.
 
 You can get a list of the currently used packages in your meteor `program.json` file:
 
@@ -176,6 +170,8 @@ You can get a list of the currently used packages in your meteor `program.json` 
 cd server/.meteor/local/build/programs/web.browser/
 cat program.json
 ```
+
+If you find that any other package is not useful anymore let me know and I will exclude them by default as well.
 
 #### config.meteorEnv
 
@@ -222,7 +218,7 @@ cd server
 meteor add aldeed:collection2
 ```
 
-Make sure the Meteor project is running or run it at least once (so it downloads the package and generates the bundle).
+Make sure the Meteor project is running or run it at least once (so it downloads the package and generates the bundle). Wait until it's completely ready (`=> App running at: http://localhost:3000/`).
 
 ```bash
 meteor
@@ -240,14 +236,12 @@ webpack-dev-server
 That's it, you can now import it in your code.
 
 ```javascript
-import { SimpleSchema } from 'meteor/aldeed_collection2';
+import { SimpleSchema } from 'meteor/aldeed:collection2';
 
 const BookSchema = new SimpleSchema({
   ...
 });
 ```
-
-Use a low dash (`_`) instead of a colon (`:`) before the package author name, just like in Meteor 1.3.
 
 ## Vendor chunks
 

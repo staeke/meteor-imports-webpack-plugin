@@ -6,6 +6,7 @@ function MeteorImportsPlugin(config) {
     'global-imports',
     'hot-code-push',
     'reload',
+    'ecmascript',
   ].concat(config.exclude || []);
   this.config = config;
 }
@@ -72,6 +73,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     manifest.forEach(function(pckge){
       if (!excluded.test(pckge.path)) {
         var packageName = /^packages\/(.+)\.js$/.exec(pckge.path)[1];
+        packageName = packageName.replace('_', ':');
         compiler.options.resolve.alias['meteor/' + packageName] =
           meteorBuild + '/' + pckge.path;
         compiler.options.module.loaders.push({
@@ -90,7 +92,6 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       .join('|'));
 		nmf.plugin("before-resolve", function(result, callback) {
 			if(!result) return callback();
-      debugger;
 			if(excluded.test(result.request)){
 				return callback();
 			}
