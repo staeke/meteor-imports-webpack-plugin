@@ -1,6 +1,10 @@
 Change History
 ==============
 
+v1.0.3
+----
+* Add code for HMR.
+
 v1.0.2
 ----
 * Fix problem with low dash and colons in Meteor package names.

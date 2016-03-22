@@ -18,3 +18,5 @@ manifest.forEach(function(pckge){
   if (!excluded.test(pckge.path))
     req('./' + pckge.path.replace('packages/', ''));
 });
+
+if (module.hot) module.hot.accept();

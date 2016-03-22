@@ -262,6 +262,16 @@ module.exports = {
 
 The default Meteor bundle (without any external package, jQuery or Blaze) is 70Kb gzipped.
 
+## Hot Module Replacement
+
+If you want to work with HMR you need to add this to your entry file:
+
+```javascript
+if (module.hot) module.hot.accept();
+```
+
+*I am not a HMR expert so if you have a better idea of how to deal with it, let me know. It will be great to avoid reloading all the Meteor code on each change.*
+
 ## Examples
 
 Webpack is a powerful but complex tool, with a non-friendly API, so reading code from examples is usually a great way to get you started.
