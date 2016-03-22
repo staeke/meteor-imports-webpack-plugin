@@ -1,7 +1,7 @@
 Change History
 ==============
 
-v1.0.3
+v1.0.4
 ----
 * Add code for HMR.
 

@@ -4,34 +4,6 @@ This plugin lets you import any Meteor package like if it was a real NPM package
 
 ----
 
-Until now, you had two options to **integrate NPM into Meteor**.
-
-### Integrate NPM into Meteor:
-
-#### 1. Meteor 1.3
-
-With the new version of Meteor, you will be able to finally add any NPM package to your project.
-
-#### 2. The `webpack:webpack` Meteor package
-
-[This excellent package](https://github.com/thereactivestack/meteor-webpack) from [Benoit Tremblay](https://github.com/eXon) creates a webpack bundle and hooks into the Meteor build system to inject it. Therefore, you use a mix between both bundle systems. You can take advantage of some of the really cool features of Webpack, like the Hot Module Replacement and keep others from Meteor, like the cli command `meteor build` for example.
-
-But now, with the Meteor Imports Webpack plugin you have a third option: **integrate Meteor into NPM.**
-
-### Integrate Meteor into NPM:
-
-#### 3. Meteor Imports Webpack Plugin
-
-The main difference between the Benoit's `webpack:webpack` package and this plugin is that the Benoit's package creates a bundle using Webpack and injects it into the Meteor build system while this plugin creates local NPM modules out of your Meteor packages and injects them into your Webpack system. So with this plugin you end up in a 100% NPM and Webpack land, without any restriction.
-
-- Want to use Babel with stage-0? covered!
-- Want to use CSS modules? covered!
-- Want to divide create a chunk for your vendors? Even with the Meteor code? covered!
-- Want to do code splitting and lazy loading? Even with separate css files? covered!
-- Want to do any other crazy Webpack stuff? covered!
-
-This approach is compatible with any past (and future) Meteor version and with any package from Atmosphere.
-
 ## How does it work
 
 This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.
@@ -47,7 +19,7 @@ Then you can add or remove packages like you normally do in Meteor. You should r
 
 ```bash
 cd server
-meteor remove insecure autopublish blaze-html-templates session jquery
+meteor remove insecure autopublish blaze-html-templates session jquery es5-shim
 ```
 
 Add the Meteor packages you want to use.
@@ -301,8 +273,8 @@ Nothing else as far as I know.
 
 ## Collaboration
 
-Open issues and do PR's. You can ask for things but [don't be rude](http://hueniverse.com/2016/01/26/how-to-use-open-source-and-shut-the-fuck-up-at-the-same-time/).
+If you want you can open issues or do PR's. I am not currently using this plugin at this moment, so I won't fix things or add new features. If you want something, do a PR.
 
 ## License
 
-MIT.
+MIT, do whatever you want.
