@@ -4,8 +4,7 @@ var config = require('./meteor-config.json');
 __meteor_runtime_config__ = config;
 
 // Create context to create a chunk for each Meteor package.
-var req = require.context(
-  'meteor-packages', false, /\.js$/);
+var context = require.context('meteor-packages', false, /\.js$/);
 
 // Create regexp to exclude the packages we don't want.
 var excluded = new RegExp(config.exclude
@@ -16,5 +15,5 @@ var excluded = new RegExp(config.exclude
 // Require the Meteor packages.
 manifest.forEach(function(pckge){
   if (!excluded.test(pckge.path))
-    req('./' + pckge.path.replace('packages/', ''));
+    context('./' + pckge.path.replace('packages/', ''));
 });
