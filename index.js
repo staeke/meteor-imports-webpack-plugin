@@ -15,6 +15,13 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
   var self = this;
 
   compiler.plugin("compile", function(params) {
+    // clear loaders from previous compile
+    for(var i = compiler.options.module.loaders.length-1; i--;){
+        if (compiler.options.module.loaders[i].meteorImports) {
+            compiler.options.module.loaders.splice(i, 1);
+        }
+    }
+
     // Create path for internal build of the meteor packages.
     var meteorBuild = path.join(
       params.normalModuleFactory.context, self.config.meteorFolder,
@@ -44,12 +51,14 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
     // Add a loader to inject the meteor config in the meteor-imports require.
     compiler.options.module.loaders.push({
+      meteorImports: true,
       test: /meteor-config/,
       loader: 'json-string-loader?json=' + JSON.stringify(self.config)
     });
 
     // Add a loader to inject this as window in the meteor packages.
     compiler.options.module.loaders.push({
+      meteorImports: true,
       test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
       loader: 'imports?this=>window'
     });
@@ -77,6 +86,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         compiler.options.resolve.alias['meteor/' + packageName] =
           meteorBuild + '/' + pckge.path;
         compiler.options.module.loaders.push({
+          meteorImports: true,
           test: new RegExp('.meteor/local/build/programs/web.browser/' + pckge.path),
           loader: 'exports?Package["' + packageName + '"]'
         })
