@@ -28,6 +28,12 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       '.meteor', 'local', 'build', 'programs', 'web.browser'
     );
 
+    // Create path for plugin node moduels directory.
+    var meteorNodeModules = path.join(__dirname, 'node_modules');
+
+    // Create path for meteor app packages directory.
+    var meteorPackages = path.join(meteorBuild, 'packages');
+
     // Check if module loaders is defined.
     if (compiler.options.module.loaders === undefined)
       throw Error('Add an empty array in module.loaders of your webpack config.');
@@ -65,13 +71,14 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
     // Add a resolveLoader to use the loaders from this plugin's own NPM
     // dependencies.
-    compiler.options.resolveLoader.modulesDirectories.push(
-      path.join(__dirname, 'node_modules')
-    );
+    if (compiler.options.resolveLoader.modulesDirectories.indexOf(meteorNodeModules) < 0) {
+      compiler.options.resolveLoader.modulesDirectories.push(meteorNodeModules);
+    }
 
     // Add Meteor packages like if they were NPM packages.
-    compiler.options.resolve.modulesDirectories.push(
-      path.join( meteorBuild, 'packages'));
+    if (compiler.options.resolve.modulesDirectories.indexOf(meteorPackages) < 0) {
+      compiler.options.resolve.modulesDirectories.push(meteorPackages);
+    }
 
     // Create an alias for each Meteor packages and a loader to extract its
     // globals.
