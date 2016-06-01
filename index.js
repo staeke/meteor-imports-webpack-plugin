@@ -15,11 +15,24 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
   var self = this;
 
   compiler.plugin("compile", function(params) {
+    // clear loaders from previous compile
+    for(var i = compiler.options.module.loaders.length-1; i--;){
+        if (compiler.options.module.loaders[i].meteorImports) {
+            compiler.options.module.loaders.splice(i, 1);
+        }
+    }
+
     // Create path for internal build of the meteor packages.
     var meteorBuild = path.join(
       params.normalModuleFactory.context, self.config.meteorFolder,
       '.meteor', 'local', 'build', 'programs', 'web.browser'
     );
+
+    // Create path for plugin node moduels directory.
+    var meteorNodeModules = path.join(__dirname, 'node_modules');
+
+    // Create path for meteor app packages directory.
+    var meteorPackages = path.join(meteorBuild, 'packages');
 
     // Check if module loaders is defined.
     if (compiler.options.module.loaders === undefined)
@@ -36,7 +49,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // variable from the meteor config file. If we inject the folder variable
     // directly in the request.context webpack goes wild.
     compiler.options.resolve.alias['meteor-build'] = meteorBuild;
-    compiler.options.resolve.alias['meteor-packages'] = meteorBuild+'/packages';
+    compiler.options.resolve.alias['meteor-packages'] = meteorPackages;
 
     // Create an alias for the meteor-imports require.
     compiler.options.resolve.alias['meteor-imports'] = path.join(
@@ -44,25 +57,28 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
     // Add a loader to inject the meteor config in the meteor-imports require.
     compiler.options.module.loaders.push({
+      meteorImports: true,
       test: /meteor-config/,
       loader: 'json-string-loader?json=' + JSON.stringify(self.config)
     });
 
     // Add a loader to inject this as window in the meteor packages.
     compiler.options.module.loaders.push({
+      meteorImports: true,
       test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
       loader: 'imports?this=>window'
     });
 
     // Add a resolveLoader to use the loaders from this plugin's own NPM
     // dependencies.
-    compiler.options.resolveLoader.modulesDirectories.push(
-      path.join(__dirname, 'node_modules')
-    );
+    if (compiler.options.resolveLoader.modulesDirectories.indexOf(meteorNodeModules) < 0) {
+      compiler.options.resolveLoader.modulesDirectories.push(meteorNodeModules);
+    }
 
     // Add Meteor packages like if they were NPM packages.
-    compiler.options.resolve.modulesDirectories.push(
-      path.join( meteorBuild, 'packages'));
+    if (compiler.options.resolve.modulesDirectories.indexOf(meteorPackages) < 0) {
+      compiler.options.resolve.modulesDirectories.push(meteorPackages);
+    }
 
     // Create an alias for each Meteor packages and a loader to extract its
     // globals.
@@ -77,6 +93,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         compiler.options.resolve.alias['meteor/' + packageName] =
           meteorBuild + '/' + pckge.path;
         compiler.options.module.loaders.push({
+          meteorImports: true,
           test: new RegExp('.meteor/local/build/programs/web.browser/' + pckge.path),
           loader: 'exports?Package["' + packageName + '"]'
         })
