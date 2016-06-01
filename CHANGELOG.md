@@ -1,6 +1,10 @@
 Change History
 ==============
 
+v1.0.5
+----
+* @adam187 fix for HMR.
+
 v1.0.4
 ----
 * Add code for HMR.
