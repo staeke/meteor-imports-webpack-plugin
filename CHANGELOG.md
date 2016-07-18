@@ -1,6 +1,10 @@
 Change History
 ==============
 
+v1.0.6
+----
+* Fix for undefined __meteor_runtime_config__.
+
 v1.0.5
 ----
 * @adam187 fix for HMR.
