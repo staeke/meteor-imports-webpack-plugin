@@ -76,7 +76,7 @@ All the `config` object is passed to `__meteor_runtime_config__` variable so if 
 
 #### config.meteorFolder
 
-The subfolder where your Meteor project is located.
+The subfolder where your Meteor project is located. It can be an absolute path as well.
 
 ```javascript
 new MeteorImportsPlugin({
