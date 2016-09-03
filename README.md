@@ -252,6 +252,10 @@ Webpack is a powerful but complex tool, with a non-friendly API, so reading code
 - [ES2015 imports in Wepack with Meteor 1.3 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3)
 - [ES2015 imports in Wepack with React, HMR and Meteor 1.3 server](https://github.com/luisherranz/meteor-imports-webpack-plugin-examples/tree/master/es2015-meteor1.3-react)
 
+## App Skeletons
+
+- **[Crater](https://github.com/jedwards1211/crater) from [@jedwards1211](https://github.com/jedwards1211)**: Meteor(/React) app skeleton that runs your userland code with pure Webpack/Babel instead of isobuild.
+
 ## The bad things
 
 - **Dev servers**: if you add or remove Meteor packages, you have to restart your dev servers, both Webpack and Meteor.
