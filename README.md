@@ -74,6 +74,12 @@ new MeteorImportsPlugin({
 
 All the `config` object is passed to `__meteor_runtime_config__` variable so if you need to pass anything else, you can.
 
+#### config.injectMeteorRuntimeConfig
+
+If `injectMeteorRuntimeConfig` is false, `meteor-imports` will not set `window.__meteor_runtime_config__`, and you don't
+need to include any of the relevant variables like `ROOT_URL` in the options.  Use this option if you would like to
+inject `__meteor_runtime_config__` in your own SSR.
+
 #### config.meteorFolder
 
 The subfolder where your Meteor project is located.
