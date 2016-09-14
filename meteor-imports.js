@@ -1,7 +1,7 @@
 var manifest = require('json!meteor-build/program.json').manifest;
 var config = require('./meteor-config.json');
 
-window.__meteor_runtime_config__ = config;
+if (config.injectMeteorRuntimeConfig !== false) window.__meteor_runtime_config__ = config;
 
 // Create context to create a chunk for each Meteor package.
 var req = require.context(
