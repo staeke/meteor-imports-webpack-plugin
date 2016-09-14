@@ -85,6 +85,11 @@ new MeteorImportsPlugin({
 })
 ```
 
+#### config.meteorProgramsFolder
+
+(Overrides `config.meteorFolder`) the path to the `programs` folder within your `meteor` folder or the result of
+`meteor build --directory`.
+
 #### config.DDP_DEFAULT_CONNECTION_URL
 
 If you are using a Meteor server, point `DDP_DEFAULT_CONNECTION_URL` to your server url. If you are developing in local, start your Meteor server and Webpack-dev-server in different ports.

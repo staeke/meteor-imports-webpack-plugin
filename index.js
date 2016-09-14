@@ -23,14 +23,12 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     }
 
     // Create path for internal build of the meteor packages.
-    var meteorFolder = path.isAbsolute(self.config.meteorFolder)
-      ? self.config.meteorFolder
-      : path.join(params.normalModuleFactory.context, self.config.meteorFolder);
-      
-    var meteorBuild = path.join(
-      meteorFolder, 
-      '.meteor', 'local', 'build', 'programs', 'web.browser'
-    );
+    var meteorBuild = self.config.meteorProgramsFolder
+      ? path.resolve(params.normalModuleFactory.context, self.config.meteorProgramsFolder, 'web.browser')
+      : path.resolve(
+        params.normalModuleFactory.context, self.config.meteorFolder,
+        '.meteor', 'local', 'build', 'programs', 'web.browser'
+      );
 
     // Create path for plugin node moduels directory.
     var meteorNodeModules = path.join(__dirname, 'node_modules');
