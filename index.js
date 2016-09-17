@@ -1,5 +1,6 @@
 var path = require('path');
-var AliasPlugin = require("enhanced-resolve/lib/AliasPlugin");
+var AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
+var ModulesInRootPlugin = require('enhanced-resolve/lib/ModulesInRootPlugin');
 
 function MeteorImportsPlugin(config) {
   config.exclude = [
@@ -66,6 +67,8 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       name: 'meteor-imports',
       alias: path.join(__dirname, './meteor-imports.js'),
     }, 'resolve'));
+
+    compiler.resolvers.loader.apply(new ModulesInRootPlugin('module', meteorNodeModules, 'resolve'));
 
     // Add a loader to inject the meteor config in the meteor-imports require.
     compiler.options.module.loaders.push({
