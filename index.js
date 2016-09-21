@@ -92,7 +92,9 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       .join('|'));
     manifest.forEach(function(pckge){
       if (!excluded.test(pckge.path)) {
-        var packageName = /^packages\/(.+)\.js$/.exec(pckge.path)[1];
+        var match = /^packages\/(.+)\.js$/.exec(pckge.path);
+        if (!match) return;
+        var packageName = match[1];
         packageName = packageName.replace('_', ':');
         compiler.resolvers.normal.apply(new AliasPlugin('described-resolve', {
           name: 'meteor/' + packageName,
