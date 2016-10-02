@@ -74,7 +74,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // https://github.com/webpack/webpack/issues/3084
     compiler.options.module.rules.push({
       meteorImports: true,
-      test: /\.json$/,
+      test: /meteor-config/,
       use: [{
         loader: 'json-string-loader',
         query: 'json=' + JSON.stringify(self.config)
