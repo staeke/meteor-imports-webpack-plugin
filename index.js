@@ -1,7 +1,6 @@
 var path = require('path');
 var AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
 var ModulesInRootPlugin = require('enhanced-resolve/lib/ModulesInRootPlugin');
-
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
@@ -18,9 +17,9 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
   compiler.plugin("compile", function(params) {
     // clear loaders from previous compile
-    for(var i = compiler.options.module.loaders.length-1; i--;){
-        if (compiler.options.module.loaders[i].meteorImports) {
-            compiler.options.module.loaders.splice(i, 1);
+    for(var i = compiler.options.module.rules.length-1; i--;){
+        if (compiler.options.module.rules[i].meteorImports) {
+            compiler.options.module.rules.splice(i, 1);
         }
     }
 
@@ -39,8 +38,8 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     var meteorPackages = path.join(meteorBuild, 'packages');
 
     // Check if module loaders is defined.
-    if (compiler.options.module.loaders === undefined)
-      throw Error('Add an empty array in module.loaders of your webpack config.');
+    if (compiler.options.module.rules === undefined)
+      throw Error('Add an empty array in module.rules of your webpack config.');
 
     // Check if Meteor has been run at least once.
     try {
@@ -71,17 +70,22 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     compiler.resolvers.loader.apply(new ModulesInRootPlugin('module', meteorNodeModules, 'resolve'));
 
     // Add a loader to inject the meteor config in the meteor-imports require.
-    compiler.options.module.loaders.push({
+    // TODO: this does not work under webpack2.1.0.beta23+
+    // https://github.com/webpack/webpack/issues/3084
+    compiler.options.module.rules.push({
       meteorImports: true,
-      test: /meteor-config/,
-      loader: 'json-string-loader?json=' + JSON.stringify(self.config)
+      test: /\.json$/,
+      use: [{
+        loader: 'json-string-loader',
+        query: 'json=' + JSON.stringify(self.config)
+      }]
     });
 
     // Add a loader to inject this as window in the meteor packages.
-    compiler.options.module.loaders.push({
+    compiler.options.module.rules.push({
       meteorImports: true,
       test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
-      loader: 'imports?this=>window'
+      use: [{loader: 'imports?this=>window'}]
     });
 
     // Create an alias for each Meteor packages and a loader to extract its
@@ -100,10 +104,10 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
           name: 'meteor/' + packageName,
           alias: path.join(meteorBuild, pckge.path),
         }, 'resolve'));
-        compiler.options.module.loaders.push({
+        compiler.options.module.rules.push({
           meteorImports: true,
           test: new RegExp('.meteor/local/build/programs/web.browser/' + pckge.path),
-          loader: 'exports?Package["' + packageName + '"]'
+          use: [{loader: 'exports?Package["' + packageName + '"]'}]
         })
       }
     });
