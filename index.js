@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 var path = require('path');
 
 function MeteorImportsPlugin(config) {

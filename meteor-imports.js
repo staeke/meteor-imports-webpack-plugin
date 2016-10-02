@@ -1,3 +1,5 @@
+/* eslint-env browser */
+
 var manifest = require('json!meteor-build/program.json').manifest;
 var config = require('./meteor-config.json');
 
