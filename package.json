@@ -4,8 +4,7 @@
   "description": "Webpack plugin to import and use Meteor packages like if they were real NPM packages.",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint *.js",
-    "prepublish": "npm run lint"
+    "lint": "eslint *.js"
   },
   "repository": {
     "type": "git",
