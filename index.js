@@ -100,6 +100,12 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       loader: 'imports?this=>window'
     });
 
+    compiler.options.module.loaders.push({
+      meteorImports: true,
+      test: strToRegex(path.join(meteorPkgsRel, '/modules.js')),
+      loader: path.join(__dirname, 'modules-loader.js')
+    });
+
     // Add a resolveLoader to use the loaders from this plugin's own NPM
     // dependencies.
     if (compiler.options.resolveLoader.modulesDirectories.indexOf(meteorNodeModules) < 0) {
@@ -149,6 +155,18 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       if (!result) return callback();
       if (excluded.test(result.request)) {
         return callback();
+      }
+      return callback(null, result);
+    });
+
+    nmf.plugin("after-resolve", function(result, callback) {
+      // We want to parse modules.js, but that's the only one as the rest relies on internal Meteor require system
+
+      if (result && result.request.match(PACKAGES_REGEX_NOT_MODULES)) {
+        result.parser = {
+          parse: function() {
+          }
+        };
       }
       return callback(null, result);
     });
