@@ -32,7 +32,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         '.meteor', 'local', 'build', 'programs', 'web.browser'
       );
 
-    // Create path for plugin node moduels directory.
+    // Create path for plugin node modules directory.
     var meteorNodeModules = path.join(__dirname, 'node_modules');
 
     // Create path for meteor app packages directory.
