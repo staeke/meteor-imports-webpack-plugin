@@ -59,17 +59,23 @@ require('meteor-imports'); // or import 'meteor-imports';
 
 ## Configuration
 
-The `config` object passed to the plugin must contain at least these properties:
+The `config` object passed to the plugin supports these properties:
 
 ```javascript
 new MeteorImportsPlugin({
+  // Required - used by Meteor to create absolute paths
   ROOT_URL: 'http://localhost:3000/',
-  DDP_DEFAULT_CONNECTION_URL: 'http://localhost:3000/',
+  
+  // Optional  
   PUBLIC_SETTINGS: {},
   meteorFolder: 'server',
   meteorEnv: { NODE_ENV: 'development' },
   exclude: ['ecmascript'],
   excludeGlobals: ['_']
+  
+  // Specify at most ONE of these. If not specified, host/protocol will be inferred from location.host
+  DDP_DEFAULT_CONNECTION_PORT: 3000,
+  DDP_DEFAULT_CONNECTION_URL: 'http://localhost:3000/', 
 })
 ```
 
