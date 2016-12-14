@@ -46,7 +46,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     try {
       var manifest = require(meteorBuild + '/program.json').manifest;
     } catch (e) {
-      throw Error('Run Meteor at least once.')
+      throw Error('Run Meteor at least once and wait for startup to complete.')
     }
 
     // Create an alias so we can do the context properly using the folder
