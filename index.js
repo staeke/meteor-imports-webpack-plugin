@@ -31,10 +31,10 @@ var PACKAGES_REGEX_NOT_MODULES = new RegExp(
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
-    'global-imports',
-    'hot-code-push',
-    'reload',
     'ecmascript',
+    'hot-code-push',
+    'livedata',
+    'reload'
   ].concat(config.exclude || []);
   this.config = config;
 }
@@ -104,6 +104,13 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       meteorImports: true,
       test: strToRegex(path.join(meteorPkgsRel, '/modules.js')),
       loader: path.join(__dirname, 'modules-loader.js')
+    });
+
+    compiler.options.module.loaders.push({
+      meteorImports: true,
+      test: strToRegex(meteorPkgsRel + '/global-imports.js'),
+      loader: path.join(__dirname, 'global-imports-loader.js'),
+      query: self.config
     });
 
     // Add a resolveLoader to use the loaders from this plugin's own NPM

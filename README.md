@@ -68,7 +68,8 @@ new MeteorImportsPlugin({
   PUBLIC_SETTINGS: {},
   meteorFolder: 'server',
   meteorEnv: { NODE_ENV: 'development' },
-  exclude: ['ecmascript']
+  exclude: ['ecmascript'],
+  excludeGlobals: ['_']
 })
 ```
 
@@ -143,8 +144,8 @@ new MeteorImportsPlugin({
 This is useful only for the core packages. If you don't to use a Meteor package you added, you should remove it using `meteor remove some:package`.
 
 By default, these core packages are excluded: `'autoupdate',
-'global-imports',
 'hot-code-push',
+'liveupdate',
 'reload', 'ecmascript'` beucase they are useless in Webpack.
 
 You can get a list of the currently used packages in your meteor `program.json` file:
@@ -155,6 +156,13 @@ cat program.json
 ```
 
 If you find that any other package is not useful anymore let me know and I will exclude them by default as well.
+
+#### config.excludeGlobals
+This controls whether ```global-imports.js``` will be included from Meteor. By default it will not. 
+This file exports a lot of global variables such as ```Meteor```, ```Tracker``` etc. on ```window```
+ 
+Set this config to ```false``` to exports all globals (for packages that aren't excluded) or an array of 
+ variable names and/or package names that will be exluded from global export.
 
 #### config.meteorEnv
 
