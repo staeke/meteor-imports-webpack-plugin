@@ -2,6 +2,32 @@
 
 var path = require('path');
 
+function escapeForRegEx(str) {
+  return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
+}
+
+function strToRegex(str) {
+  return new RegExp(escapeForRegEx(str));
+}
+
+var PATH_SEP_REGEX = '[/\\\\]';
+
+// Join an array with environment agnostic path identifiers
+function arrToPathForRegEx(arr) {
+  return arr.map(function(x) {
+    return escapeForRegEx(x)
+  }).join(PATH_SEP_REGEX);
+}
+
+var BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
+var PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
+var PACKAGES_REGEX = new RegExp(arrToPathForRegEx(PACKAGES_PATH_PARTS));
+var PACKAGES_REGEX_NOT_MODULES = new RegExp(
+  arrToPathForRegEx(PACKAGES_PATH_PARTS) +
+  PATH_SEP_REGEX +
+  '(?!modules\.js)[^/\\\\]+$'
+);
+
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
@@ -27,10 +53,10 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // Create path for internal build of the meteor packages.
     var meteorBuild = self.config.meteorProgramsFolder
       ? path.resolve(params.normalModuleFactory.context, self.config.meteorProgramsFolder, 'web.browser')
-      : path.resolve(
-        params.normalModuleFactory.context, self.config.meteorFolder,
-        '.meteor', 'local', 'build', 'programs', 'web.browser'
-      );
+      : path.resolve.apply(path, [
+      params.normalModuleFactory.context,
+      self.config.meteorFolder
+    ].concat(BUILD_PATH_PARTS));
 
     // Create path for plugin node modules directory.
     var meteorNodeModules = path.join(__dirname, 'node_modules');
@@ -66,10 +92,11 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       loader: 'json-string-loader?json=' + JSON.stringify(self.config)
     });
 
+    var meteorPkgsRel = PACKAGES_PATH_PARTS.join('/');
     // Add a loader to inject this as window in the meteor packages.
     compiler.options.module.loaders.push({
       meteorImports: true,
-      test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
+      test: new RegExp(escapeForRegEx(meteorPkgsRel) + '.*\\.js'),
       loader: 'imports?this=>window'
     });
 
