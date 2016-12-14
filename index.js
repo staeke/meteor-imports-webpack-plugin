@@ -18,10 +18,10 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
   compiler.plugin("compile", function(params) {
     // clear loaders from previous compile
-    for(var i = compiler.options.module.loaders.length-1; i--;){
-        if (compiler.options.module.loaders[i].meteorImports) {
-            compiler.options.module.loaders.splice(i, 1);
-        }
+    for (var i = compiler.options.module.loaders.length - 1; i--;) {
+      if (compiler.options.module.loaders[i].meteorImports) {
+        compiler.options.module.loaders.splice(i, 1);
+      }
     }
 
     // Create path for internal build of the meteor packages.
@@ -118,14 +118,14 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     var excluded = new RegExp(self.config.exclude
       .map(function(exclude) { return '^\./' + exclude + '\.js$' })
       .join('|'));
-		nmf.plugin("before-resolve", function(result, callback) {
-			if(!result) return callback();
-			if(excluded.test(result.request)){
-				return callback();
-			}
-			return callback(null, result);
-		});
-	});
+    nmf.plugin("before-resolve", function(result, callback) {
+      if (!result) return callback();
+      if (excluded.test(result.request)) {
+        return callback();
+      }
+      return callback(null, result);
+    });
+  });
 };
 
 module.exports = MeteorImportsPlugin;
