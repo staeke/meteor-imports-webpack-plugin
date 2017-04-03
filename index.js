@@ -8,7 +8,6 @@ function MeteorImportsPlugin(config) {
     'autoupdate',
     'global-imports',
     'hot-code-push',
-    'reload',
     'ecmascript',
   ].concat(config.exclude || []);
   this.config = config;
