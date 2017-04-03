@@ -100,6 +100,9 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // Create path for internal build of the meteor packages.
     var meteorBuild = getMeteorBuild(nmf.context)
 
+    // Create path for meteor app packages directory.
+    var meteorPackages = path.join(meteorBuild, 'packages');
+
     var manifest = getManifest(nmf.context)
 
     var extraRules = [
@@ -117,6 +120,15 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
         loader: 'imports?this=>window',
       },
+      {
+        meteorImports: true,
+        test: /\.css$/,
+        include: [meteorPackages],
+        use: [
+          {loader: 'style-loader'},
+          {loader: 'css-loader'}
+        ]
+      }
     ]
     manifest.forEach(function (pckge) {
       if (!excluded.test(pckge.path)) {
