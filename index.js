@@ -119,11 +119,6 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       compiler.options.resolveLoader.modulesDirectories.push(meteorNodeModules);
     }
 
-    // Add Meteor packages like if they were NPM packages.
-    if (compiler.options.resolve.modulesDirectories.indexOf(meteorPackages) < 0) {
-      compiler.options.resolve.modulesDirectories.push(meteorPackages);
-    }
-
     // Create an alias for each Meteor packages and a loader to extract its
     // globals.
     var excluded = new RegExp(self.config.exclude
