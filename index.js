@@ -21,7 +21,6 @@ function arrToPathForRegEx(arr) {
 
 var BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
 var PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
-var PACKAGES_REGEX = new RegExp(arrToPathForRegEx(PACKAGES_PATH_PARTS));
 var PACKAGES_REGEX_NOT_MODULES = new RegExp(
   arrToPathForRegEx(PACKAGES_PATH_PARTS) +
   PATH_SEP_REGEX +
