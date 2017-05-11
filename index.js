@@ -34,7 +34,6 @@ function MeteorImportsPlugin(config) {
     'ecmascript',
     'hot-code-push',
     'livedata',
-    'reload'
   ].concat(config.exclude || []);
   this.config = config;
 }
