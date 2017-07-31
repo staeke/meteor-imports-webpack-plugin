@@ -35,7 +35,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // Create path for internal build of the meteor packages.
     var meteorBuild = getMeteorBuild(params.normalModuleFactory.context)
 
-    // Create path for plugin node moduels directory.
+    // Create path for plugin node modules directory.
     var meteorNodeModules = path.join(__dirname, 'node_modules');
 
     // Create path for meteor app packages directory.
