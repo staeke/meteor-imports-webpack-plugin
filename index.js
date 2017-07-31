@@ -27,7 +27,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     try {
       return require(getMeteorBuild(context) + '/program.json').manifest;
     } catch (e) {
-      throw Error('Run Meteor at least once.')
+      throw Error('Run Meteor at least once and wait for startup to complete.')
     }
   }
 
