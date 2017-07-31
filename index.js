@@ -3,6 +3,11 @@ var webpack = require('webpack');
 var RuleSet = require('webpack/lib/RuleSet');
 var AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
 var ModulesInRootPlugin = require('enhanced-resolve/lib/ModulesInRootPlugin');
+
+function escapeForRegEx(str) {
+  return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
+}
+
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
@@ -117,7 +122,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       },
       {
         meteorImports: true,
-        test: new RegExp('.meteor/local/build/programs/web.browser/packages'),
+        test: new RegExp(escapeForRegEx('.meteor/local/build/programs/web.browser/packages')),
         loader: 'imports?this=>window',
       },
       {
@@ -138,7 +143,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         packageName = packageName.replace('_', ':');
         extraRules.push({
           meteorImports: true,
-          test: new RegExp('.meteor/local/build/programs/web.browser/' + pckge.path),
+          test: new RegExp(escapeForRegEx('.meteor/local/build/programs/web.browser/' + pckge.path)),
           loader: 'exports?Package["' + packageName + '"]',
         })
       }
