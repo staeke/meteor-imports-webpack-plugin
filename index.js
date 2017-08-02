@@ -8,6 +8,18 @@ function escapeForRegEx(str) {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 }
 
+// Join an array with environment agnostic path identifiers
+function arrToPathForRegEx(arr) {
+  return arr.map(function(x) {
+    return escapeForRegEx(x)
+  }).join('/');
+}
+
+var BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
+var PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
+var PACKAGES_REGEX = new RegExp(arrToPathForRegEx(PACKAGES_PATH_PARTS));
+
+
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
@@ -24,7 +36,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
   function getMeteorBuild(context) {
     return self.config.meteorProgramsFolder
       ? path.resolve(context, self.config.meteorProgramsFolder, 'web.browser')
-      : path.resolve(context, self.config.meteorFolder, '.meteor', 'local', 'build', 'programs', 'web.browser');
+      : path.resolve.apply(path, [context, self.config.meteorFolder].concat(BUILD_PATH_PARTS));
   }
 
   function getManifest(context) {
@@ -94,6 +106,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     var excluded = new RegExp(self.config.exclude
       .map(function (exclude) { return '^\./' + exclude + '\.js$' })
       .join('|'));
+
 		nmf.plugin("before-resolve", function (result, callback) {
 			if(!result) return callback();
 			if(excluded.test(result.request)){
@@ -122,7 +135,7 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       },
       {
         meteorImports: true,
-        test: new RegExp(escapeForRegEx('.meteor/local/build/programs/web.browser/packages')),
+        test: PACKAGES_REGEX,
         loader: 'imports-loader?this=>window',
       },
       {
