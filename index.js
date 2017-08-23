@@ -18,6 +18,16 @@ function arrToPathForRegEx(arr) {
 var BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
 var PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
 var PACKAGES_REGEX = new RegExp(arrToPathForRegEx(PACKAGES_PATH_PARTS));
+var PACKAGES_REGEX_NOT_MODULES = new RegExp(
+  arrToPathForRegEx(PACKAGES_PATH_PARTS) +
+  '\\/(?!modules\\.js)[^/\\\\]+$'
+);
+var PACKAGES_REGEX_MODULES = new RegExp(
+  arrToPathForRegEx(PACKAGES_PATH_PARTS) +
+  '\\/modules\\.js$'
+);
+
+
 
 
 function MeteorImportsPlugin(config) {
@@ -115,6 +125,19 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 			return callback(null, result);
 		});
 
+
+    nmf.plugin("after-resolve", function(result, callback) {
+      // We want to parse modules.js, but that's the only one as the rest relies on internal Meteor require system
+
+      if (result && result.request.match(PACKAGES_REGEX_NOT_MODULES)) {
+        result.parser = {
+          parse: function() {
+          }
+        };
+      }
+      return callback(null, result);
+    });
+
     // Create path for internal build of the meteor packages.
     var meteorBuild = getMeteorBuild(nmf.context)
 
@@ -135,8 +158,13 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
       },
       {
         meteorImports: true,
-        test: PACKAGES_REGEX,
+        test: PACKAGES_REGEX_NOT_MODULES,
         loader: 'imports-loader?this=>window',
+      },
+      {
+        meteorImports: true,
+        test: PACKAGES_REGEX_MODULES,
+        loader: path.join(__dirname, 'modules-loader.js')
       },
       {
         meteorImports: true,
