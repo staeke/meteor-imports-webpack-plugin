@@ -26,6 +26,10 @@ var PACKAGES_REGEX_MODULES = new RegExp(
   arrToPathForRegEx(PACKAGES_PATH_PARTS) +
   '\\/modules\\.js$'
 );
+var PACKAGES_REGEX_GLOBAL_IMPORTS = new RegExp(
+  arrToPathForRegEx(PACKAGES_PATH_PARTS) +
+  '\\/global-imports\\.js$'
+);
 
 
 
@@ -33,8 +37,8 @@ var PACKAGES_REGEX_MODULES = new RegExp(
 function MeteorImportsPlugin(config) {
   config.exclude = [
     'autoupdate',
-    'global-imports',
     'hot-code-push',
+    'livedate',
     'ecmascript',
   ].concat(config.exclude || []);
   this.config = config;
@@ -165,6 +169,12 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
         meteorImports: true,
         test: PACKAGES_REGEX_MODULES,
         loader: path.join(__dirname, 'modules-loader.js')
+      },
+      {
+        meteorImports: true,
+        test: PACKAGES_REGEX_GLOBAL_IMPORTS,
+        loader: path.join(__dirname, 'global-imports-loader.js'),
+        options: self.config
       },
       {
         meteorImports: true,
