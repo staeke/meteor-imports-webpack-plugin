@@ -26,10 +26,7 @@ var PACKAGES_REGEX_MODULES = new RegExp(
   arrToPathForRegEx(PACKAGES_PATH_PARTS) +
   '\\/modules\\.js$'
 );
-var PACKAGES_REGEX_GLOBAL_IMPORTS = new RegExp(
-  arrToPathForRegEx(PACKAGES_PATH_PARTS) +
-  '\\/global-imports\\.js$'
-);
+var PACKAGES_REGEX_GLOBAL_IMPORTS = /\/global-imports\.js$/;
 
 
 
@@ -99,8 +96,9 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     // globals.
     var excluded = new RegExp(self.config.exclude
       .map(function(exclude){ return '^packages/' + exclude + '\.js$'; })
-      .concat('^app\/.+.js$')
+      .concat('^app\/app.*\.js$')
       .join('|'));
+
     manifest.forEach(function(pckge){
       if (!excluded.test(pckge.path)) {
         var match = /^packages\/(.+)\.js$/.exec(pckge.path);

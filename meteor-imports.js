@@ -14,7 +14,7 @@ var req = require.context('meteor-packages', true, /\.(js|css)$/);
 // Create regexp to exclude the packages we don't want.
 var excluded = new RegExp(config.exclude
   .map(function(exclude){ return '^packages/' + exclude + '.js$'; })
-  .concat('^app\/.+.js$')
+  .concat('^app\/app.*\.js$')
   .join('|'));
 
 // Require the Meteor packages.
