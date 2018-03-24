@@ -15,6 +15,7 @@ var req = require.context('meteor-packages', true, /\.(js|css)$/);
 var excluded = new RegExp(config.exclude
   .map(function(exclude){ return '^packages/' + exclude + '.js$'; })
   .concat('^app\/app.*\.js$')
+  .concat('\\/global-imports\\.js$')
   .join('|'));
 
 // Require the Meteor packages.
@@ -22,5 +23,9 @@ manifest.forEach(function(pckge){
   if (!excluded.test(pckge.path) && pckge.type !== 'asset')
     req('./' + pckge.path.replace('packages/', ''));
 });
+
+if (config.globalImports) {
+  require('meteor/global-imports');
+}
 
 if (module.hot) module.hot.accept();

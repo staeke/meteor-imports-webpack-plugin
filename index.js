@@ -101,9 +101,9 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
 
     manifest.forEach(function(pckge){
       if (!excluded.test(pckge.path)) {
-        var match = /^packages\/(.+)\.js$/.exec(pckge.path);
+        var match = /^(packages|app)\/(.+)\.js$/.exec(pckge.path);
         if (!match) return;
-        var packageName = match[1];
+        var packageName = match[2];
         packageName = packageName.replace('_', ':');
         compiler.resolvers.normal.apply(new AliasPlugin('described-resolve', {
           name: 'meteor/' + packageName,
@@ -186,15 +186,19 @@ MeteorImportsPlugin.prototype.apply = function(compiler) {
     ]
     manifest.forEach(function (pckge) {
       if (!excluded.test(pckge.path)) {
-        var match = /^packages\/(.+)\.js$/.exec(pckge.path);
-        if (!match) return;
-        var packageName = match[1];
-        packageName = packageName.replace('_', ':');
-        extraRules.push({
+        var rule = {
           meteorImports: true,
           test: new RegExp(escapeForRegEx('.meteor/local/build/programs/web.browser/' + pckge.path)),
-          loader: 'exports-loader?Package["' + packageName + '"]',
-        })
+        };
+
+        var match = /^packages\/(.+)\.js$/.exec(pckge.path);
+        if (match) {
+          // Note: this won't match for global-imports from Meteor 1.6.1 and up
+          var packageName = match[1].replace('_', ':');
+          rule.loader = 'exports-loader?Package["' + packageName + '"]';
+        }
+
+        extraRules.push(rule);
       }
     });
     nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules))
