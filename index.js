@@ -110,6 +110,16 @@ class MeteorImportsPlugin {
       name: 'meteor-imports',
       alias: path.join(__dirname, './meteor-imports.js'),
     }, 'resolve').apply(resolver);
+
+    // Provide aliases for all packages so that they can be imported
+    for (let pkg of this.packages) {
+      if (!pkg.path) continue; // can be just a source string
+      new AliasPlugin('described-resolve', {
+        name: 'meteor/' + pkg.name,
+        onlyModule: true,
+        alias: path.join(this.meteorBuild, pkg.path),
+      }, 'resolve').apply(resolver);
+    }
   }
 
   addLoaders(params) {
