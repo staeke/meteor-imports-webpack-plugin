@@ -199,6 +199,12 @@ class MeteorImportsPlugin {
 
   setupAutoupdate(compiler) {
     if (this.config.emitAutoupdateVersion) {
+      const isDevServer = process.argv.find(v => v.includes('webpack-dev-server'));
+      if (isDevServer && this.config.emitAutoupdateVersion !== 'force') {
+        console.warn('Not patching html with auto update version as you are running webpack-dev-server. You would otherwise probably face a ever reloading page. If this is really what you want, please specify emitAutoupdateVersion: "force"');
+        return;
+      }
+
       compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
         compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
           compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(PLUGIN_NAME, data => {
