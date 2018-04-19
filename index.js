@@ -55,11 +55,6 @@ class MeteorImportsPlugin {
         .tap(PLUGIN_NAME, resolver => {
           this.addAliases(resolver);
         });
-      compiler.resolverFactory.hooks.resolver
-        .for('loader')
-        .tap(PLUGIN_NAME, resolver => {
-          new ModulesInRootPlugin('module', this.meteorNodeModules, 'resolve').apply(resolver);
-        });
     });
   }
 
@@ -71,8 +66,6 @@ class MeteorImportsPlugin {
       : path.resolve.apply(path, [context, this.config.meteorFolder].concat(BUILD_PATH_PARTS));
 
     this.meteorPackages = path.join(this.meteorBuild, 'packages');
-
-    this.meteorNodeModules = path.join(__dirname, 'node_modules');
   }
 
   readPackages() {
