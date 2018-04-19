@@ -1,10 +1,12 @@
+const _ = require('lodash');
+
 module.exports = function (source) {
   let output = '';
 
   const config = this.query.config;
   const packages = this.query.packages;
 
-  const clientConfig = config;
+  const clientConfig = _.omit(config, 'exclude', 'meteorFolder', 'packages');
   const jsonConfig = JSON.stringify(clientConfig);
 
   if (config.injectMeteorRuntimeConfig !== false)
