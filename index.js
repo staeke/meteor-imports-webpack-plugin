@@ -1,4 +1,6 @@
+const fs = require('fs');
 const _ = require('lodash');
+const md5 = require('md5');
 const path = require('path');
 const webpack = require('webpack');
 const RuleSet = require('webpack/lib/RuleSet');
@@ -54,6 +56,8 @@ class MeteorImportsPlugin {
           this.addAliases(resolver);
         });
     });
+
+    this.setupAutoupdate(compiler);
   }
 
   initConfig(wpConfig) {
@@ -191,6 +195,28 @@ class MeteorImportsPlugin {
     ];
     const nmf = params.normalModuleFactory;
     nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules));
+  }
+
+  setupAutoupdate(compiler) {
+    if (this.config.emitAutoupdateVersion) {
+      compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
+        compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
+          compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(PLUGIN_NAME, data => {
+            const hash = md5(data.html);
+            data.html = data.html.replace(/(<\s*head\s*>)/,
+              `$1\n<script>window.__meteor_runtime_config__ = {autoupdateVersion:"${hash}"}</script>`);
+
+            // Also kick off an async write to the output file
+            let outputPath = compiler.options.output.path;
+            const outputFile = path.join(outputPath, 'autoupdate_version');
+            fs.writeFile(outputFile, hash, err => {
+              if (err) console.error(err);
+              else console.log('Wrote autoupdate_version file to ', outputFile);
+            })
+          });
+        });
+      });
+    }
   }
 }
 

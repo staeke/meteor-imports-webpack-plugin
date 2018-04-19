@@ -9,8 +9,11 @@ module.exports = function (source) {
   const clientConfig = _.omit(config, 'exclude', 'meteorFolder', 'packages', 'autoupdate', 'reload');
   const jsonConfig = JSON.stringify(clientConfig);
 
-  if (config.injectMeteorRuntimeConfig !== false)
-    output += 'var config = window.__meteor_runtime_config__ = ' + jsonConfig + ';\n';
+  if (config.injectMeteorRuntimeConfig !== false) {
+    output += 'var config = window.__meteor_runtime_config__ || (window.__meteor_runtime_config__ = {});\n';
+    output += `Object.assign(config, ${jsonConfig});\n`;
+  }
+
   if (!config.DDP_DEFAULT_CONNECTION_URL) {
     const port = config.DDP_DEFAULT_CONNECTION_PORT || 3000;
     output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "\//" + window.location.hostname + ":" + "' + port + '";\n';
