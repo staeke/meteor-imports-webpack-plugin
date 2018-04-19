@@ -1,18 +1,16 @@
-var reGlobalPackage = /^([^\s=]*).*Package[.\[]'?"?([^.'"]+).*$/gm;
+const reGlobalPackage = /^([^\s=]*).*Package[.\[]'?"?([^.'"]+).*$/gm;
 
 module.exports = function(source) {
   this.cacheable();
 
-  var config = this.query;
+  const config = this.query;
 
-  var exclGlobals = config.excludeGlobals;
+  let exclGlobals = config.excludeGlobals;
   if (typeof config.excludeGlobals === 'string')
     exclGlobals = [exclGlobals];
 
-
-  var withCheckedPackages = source.replace(reGlobalPackage, replacer);
   function replacer(match, varName, pkgName) {
-    if (config.exclude.indexOf(pkgName) > -1)
+    if (config.exclude[pkgName])
       return '';
 
     if (Array.isArray(exclGlobals))
@@ -21,5 +19,6 @@ module.exports = function(source) {
     return match;
   }
 
+  const withCheckedPackages = source.replace(reGlobalPackage, replacer);
   return withCheckedPackages;
-}
+};

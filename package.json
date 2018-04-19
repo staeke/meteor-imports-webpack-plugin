@@ -1,6 +1,9 @@
 {
   "name": "meteor-imports-webpack-plugin",
   "version": "2.0.3",
+  "engines": {
+    "node": ">=6.4.0"
+  },
   "description": "Webpack plugin to import and use Meteor packages like if they were real NPM packages.",
   "main": "index.js",
   "scripts": {},

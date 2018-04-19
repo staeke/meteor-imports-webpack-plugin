@@ -1,18 +1,18 @@
-var manifest = require('meteor-build/program.json').manifest;
-var config = require('./meteor-config');
+const manifest = require('meteor-build/program.json').manifest;
+const config = require('./meteor-config');
 
 if (config.injectMeteorRuntimeConfig !== false) window.__meteor_runtime_config__ = config;
 
 if (!config.DDP_DEFAULT_CONNECTION_URL) {
-  var port = config.DDP_DEFAULT_CONNECTION_PORT || 3000;
+  const port = config.DDP_DEFAULT_CONNECTION_PORT || 3000;
   config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + '//' + window.location.hostname + ':' + port;
 }
 
 // Create context to create a chunk for each Meteor package.
-var req = require.context('meteor-packages', true, /\.(js|css)$/);
+const req = require.context('meteor-packages', true, /\.(js|css)$/);
 
 // Create regexp to exclude the packages we don't want.
-var excluded = new RegExp(config.exclude
+const excluded = new RegExp(config.exclude
   .map(function(exclude){ return '^packages/' + exclude + '.js$'; })
   .concat('^app\/app.*\.js$')
   .concat('\\/global-imports\\.js$')
