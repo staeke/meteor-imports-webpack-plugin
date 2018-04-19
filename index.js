@@ -63,20 +63,27 @@ class MeteorImportsPlugin {
       meteorEnv: {
         NODE_ENV: production ? 'production' : undefined
       },
+      autoupdate: 'auto',
+      reload: 'auto',
       stripPackagesWithoutFiles: true,
+      emitAutoupdateVersion: 'auto',
       exclude: {}
-    };
-
-    const hardExclude = {
-      autoupdate: true,
-      reload: true
     };
 
     this.config = Object.assign(defaults, this.options);
     const exc = this.config.exclude;
     if (Array.isArray(exc))
       this.config.exclude = _.zipObject(exc, exc.map(k => true));
-    this.config.exclude = Object.assign(this.config.exclude, hardExclude);
+
+    const useAutoupdate = this.config.autoupdate || (this.config.autoupdate === 'auto' && production);
+    if (!useAutoupdate) {
+      this.config.exclude['autoupdate'] = true;
+    }
+
+    const useReload = this.config.reload || (this.config.reload === 'auto' && production);
+    if (!useReload) {
+      this.config.exclude['reload'] = true;
+    }
   }
 
   setPaths(compiler) {

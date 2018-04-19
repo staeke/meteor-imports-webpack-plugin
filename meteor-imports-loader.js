@@ -6,7 +6,7 @@ module.exports = function (source) {
   const config = this.query.config;
   const packages = this.query.packages;
 
-  const clientConfig = _.omit(config, 'exclude', 'meteorFolder', 'packages');
+  const clientConfig = _.omit(config, 'exclude', 'meteorFolder', 'packages', 'autoupdate', 'reload');
   const jsonConfig = JSON.stringify(clientConfig);
 
   if (config.injectMeteorRuntimeConfig !== false)
