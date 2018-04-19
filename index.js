@@ -91,24 +91,11 @@ class MeteorImportsPlugin {
   }
 
   addAliases(resolver) {
-    // Create an alias so we can do the context properly using the folder
-    // variable from the meteor config file. If we inject the folder variable
-    // directly in the request.context webpack goes wild.
-    new AliasPlugin('described-resolve', {
-      name: 'meteor-build',
-      alias: meteorBuild,
-    }, 'resolve').apply(resolver);
-
-    new AliasPlugin('described-resolve', {
-      name: 'meteor-packages',
-      alias: meteorPackages,
-      onlyModule: false,
-    }, 'resolve').apply(resolver);
-
     // Provide the alias "meteor-imports"
     new AliasPlugin('described-resolve', {
       name: 'meteor-imports',
-      alias: path.join(__dirname, './meteor-imports.js'),
+      onlyModule: true,
+      alias: path.join(__dirname, './meteor-imports-loader.js'),
     }, 'resolve').apply(resolver);
 
     // Provide aliases for all packages so that they can be imported
@@ -126,11 +113,11 @@ class MeteorImportsPlugin {
     const extraRules = [
       {
         meteorImports: true,
-        test: /meteor-config$/,
-        include: [__dirname],
-        use: {
-          loader: 'json-string-loader',
-          options: {json: JSON.stringify(this.config)}
+        test: /meteor-imports-loader\.js/,
+        loader: path.join(__dirname, 'meteor-imports-loader.js'),
+        options: {
+          packages: this.packages,
+          config: this.config
         }
       },
       {
