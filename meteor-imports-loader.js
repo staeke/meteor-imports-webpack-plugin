@@ -24,7 +24,5 @@ module.exports = function (source) {
     output += 'require("meteor/' + pkg.name + '");\n';
   }
 
-  output += 'if (module.hot) module.hot.accept(); \n'
-
   return output;
 };
