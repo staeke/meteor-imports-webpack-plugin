@@ -57,9 +57,11 @@ class MeteorImportsPlugin {
   }
 
   initConfig(wpConfig) {
+    const production = wpConfig.mode === 'production';
+
     const defaults = {
       meteorEnv: {
-        NODE_ENV: undefined
+        NODE_ENV: production ? 'production' : undefined
       },
       exclude: {}
     };
