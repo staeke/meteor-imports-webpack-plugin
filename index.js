@@ -28,7 +28,7 @@ const PACKAGES_REGEX_MODULES = new RegExp(
 );
 const PACKAGES_REGEX_GLOBAL_IMPORTS = /\/global-imports\.js$/;
 
-
+const PLUGIN_NAME = 'MeteorImportsWebpackPlugin';
 
 
 class MeteorImportsPlugin {
@@ -60,7 +60,7 @@ class MeteorImportsPlugin {
       }
     }
 
-    compiler.plugin("compile", function(params) {
+    compiler.hooks.compile.tap(PLUGIN_NAME, function(params) {
       // Create path for internal build of the meteor packages.
       const meteorBuild = getMeteorBuild(params.normalModuleFactory.context);
 
@@ -71,27 +71,6 @@ class MeteorImportsPlugin {
       const meteorPackages = path.join(meteorBuild, 'packages');
 
       const manifest = getManifest(params.normalModuleFactory.context);
-
-      // Create an alias so we can do the context properly using the folder
-      // variable from the meteor config file. If we inject the folder variable
-      // directly in the request.context webpack goes wild.
-      compiler.resolvers.normal.apply(new AliasPlugin('described-resolve', {
-        name: 'meteor-build',
-        alias: meteorBuild,
-      }, 'resolve'));
-      compiler.resolvers.context.apply(new AliasPlugin('described-resolve', {
-        name: 'meteor-packages',
-        alias: meteorPackages,
-        onlyModule: false,
-      }, 'resolve'));
-
-      // Create an alias for the meteor-imports require.
-      compiler.resolvers.normal.apply(new AliasPlugin('described-resolve', {
-        name: 'meteor-imports',
-        alias: path.join(__dirname, './meteor-imports.js'),
-      }, 'resolve'));
-
-      compiler.resolvers.loader.apply(new ModulesInRootPlugin('module', meteorNodeModules, 'resolve'));
 
       // Create an alias for each Meteor packages and a loader to extract its
       // globals.
@@ -112,15 +91,47 @@ class MeteorImportsPlugin {
           }, 'resolve'));
         }
       });
+
+      compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
+        compiler.resolverFactory.hooks.resolver
+          .for("normal")
+          .tap(PLUGIN_NAME, resolver => {
+            // Create an alias so we can do the context properly using the folder
+            // variable from the meteor config file. If we inject the folder variable
+            // directly in the request.context webpack goes wild.
+            new AliasPlugin('described-resolve', {
+              name: 'meteor-build',
+              alias: meteorBuild,
+            }, 'resolve').apply(resolver);
+
+            new AliasPlugin('described-resolve', {
+              name: 'meteor-packages',
+              alias: meteorPackages,
+              onlyModule: false,
+            }, 'resolve').apply(resolver);
+
+            // Create an alias for the meteor-imports require.
+            new AliasPlugin('described-resolve', {
+              name: 'meteor-imports',
+              alias: path.join(__dirname, './meteor-imports.js'),
+            }, 'resolve').apply(resolver);
+          });
+
+        compiler.resolverFactory.hooks.resolver
+          .for('loader')
+          .tap(PLUGIN_NAME, resolver => {
+            new ModulesInRootPlugin('module', meteorNodeModules, 'resolve').apply(resolver);
+          });
+      });
     });
 
     // Don't create modules and chunks for excluded packages.
-    compiler.plugin("normal-module-factory", function (nmf) {
+    compiler.hooks.normalModuleFactory.tap(PLUGIN_NAME, function (nmf) {
       const excluded = new RegExp(self.config.exclude
         .map(function (exclude) { return '^\./' + exclude + '\.js$' })
         .join('|'));
 
-      nmf.plugin("before-resolve", function (result, callback) {
+      nmf.hooks.beforeResolve.tap(PLUGIN_NAME, function (result, callback) {
         if(!result) return callback();
         if(excluded.test(result.request)){
           return callback();
@@ -129,7 +140,7 @@ class MeteorImportsPlugin {
       });
 
 
-      nmf.plugin("after-resolve", function(result, callback) {
+      nmf.hooks.afterResolve.tap(PLUGIN_NAME,  function(result, callback) {
         // We want to parse modules.js, but that's the only one as the rest relies on internal Meteor require system
 
         if (result && result.request.match(PACKAGES_REGEX_NOT_MODULES)) {
