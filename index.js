@@ -11,7 +11,7 @@ function escapeForRegEx(str) {
 // Join an array with environment agnostic path identifiers
 function arrToPathForRegEx(arr) {
   return arr.map(function(x) {
-    return escapeForRegEx(x)
+    return escapeForRegEx(x);
   }).join('/');
 }
 
@@ -43,178 +43,121 @@ class MeteorImportsPlugin {
   }
 
   apply(compiler) {
-    const self = this;
+    this.setPaths(compiler);
+    this.readPackages();
+    compiler.hooks.compile.tap(PLUGIN_NAME, params => {
+      this.addLoaders(params);
+    });
 
-    function getMeteorBuild(context) {
-      return self.config.meteorProgramsFolder
-        ? path.resolve(context, self.config.meteorProgramsFolder, 'web.browser')
-        : path.resolve.apply(path, [context, self.config.meteorFolder].concat(BUILD_PATH_PARTS));
+    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
+      compiler.resolverFactory.hooks.resolver
+        .for("normal")
+        .tap(PLUGIN_NAME, resolver => {
+          this.addAliases(resolver);
+        });
+      compiler.resolverFactory.hooks.resolver
+        .for('loader')
+        .tap(PLUGIN_NAME, resolver => {
+          new ModulesInRootPlugin('module', this.meteorNodeModules, 'resolve').apply(resolver);
+        });
+    });
+  }
+
+  setPaths(compiler) {
+    const context = compiler.context;
+
+    this.meteorBuild = this.config.meteorProgramsFolder
+      ? path.resolve(context, this.config.meteorProgramsFolder, 'web.browser')
+      : path.resolve.apply(path, [context, this.config.meteorFolder].concat(BUILD_PATH_PARTS));
+
+    this.meteorPackages = path.join(this.meteorBuild, 'packages');
+
+    this.meteorNodeModules = path.join(__dirname, 'node_modules');
+  }
+
+  readPackages() {
+    let manifest;
+    try {
+      manifest = require(this.meteorBuild + '/program.json').manifest;
+    } catch (e) {
+      throw Error('Run Meteor at least once and wait for startup to complete.');
     }
 
-    function getManifest(context) {
-      // Check if Meteor has been run at least once.
-      try {
-        return require(getMeteorBuild(context) + '/program.json').manifest;
-      } catch (e) {
-        throw Error('Run Meteor at least once and wait for startup to complete.')
+    this.packages = manifest
+      .filter(x => x.type === 'js' || x.type === 'css')
+      .filter(x => x.path !== 'app/app.js')
+      .filter(x => !this.config.exclude.includes(x))
+      .filter(x => {
+        const match = x.path.match(/(packages|app)\/(.+)\.[^.]+$/);
+        if (!match) {
+          console.error('Unexpected package path', x.path);
+          return false;
+        }
+        return true;
+      });
+  }
+
+  addAliases(resolver) {
+    // Create an alias so we can do the context properly using the folder
+    // variable from the meteor config file. If we inject the folder variable
+    // directly in the request.context webpack goes wild.
+    new AliasPlugin('described-resolve', {
+      name: 'meteor-build',
+      alias: meteorBuild,
+    }, 'resolve').apply(resolver);
+
+    new AliasPlugin('described-resolve', {
+      name: 'meteor-packages',
+      alias: meteorPackages,
+      onlyModule: false,
+    }, 'resolve').apply(resolver);
+
+    // Provide the alias "meteor-imports"
+    new AliasPlugin('described-resolve', {
+      name: 'meteor-imports',
+      alias: path.join(__dirname, './meteor-imports.js'),
+    }, 'resolve').apply(resolver);
+  }
+
+  addLoaders(params) {
+    const extraRules = [
+      {
+        meteorImports: true,
+        test: /meteor-config$/,
+        include: [__dirname],
+        use: {
+          loader: 'json-string-loader',
+          options: {json: JSON.stringify(this.config)}
+        }
+      },
+      {
+        meteorImports: true,
+        test: PACKAGES_REGEX_NOT_MODULES,
+        loader: 'imports-loader?this=>window',
+      },
+      {
+        meteorImports: true,
+        test: PACKAGES_REGEX_MODULES,
+        loader: path.join(__dirname, 'modules-loader.js')
+      },
+      {
+        meteorImports: true,
+        test: PACKAGES_REGEX_GLOBAL_IMPORTS,
+        loader: path.join(__dirname, 'global-imports-loader.js'),
+        options: this.config
+      },
+      {
+        meteorImports: true,
+        test: /\.css$/,
+        include: [this.meteorPackages],
+        use: [
+          {loader: 'style-loader'},
+          {loader: 'css-loader'}
+        ]
       }
-    }
-
-    compiler.hooks.compile.tap(PLUGIN_NAME, function(params) {
-      // Create path for internal build of the meteor packages.
-      const meteorBuild = getMeteorBuild(params.normalModuleFactory.context);
-
-      // Create path for plugin node modules directory.
-      const meteorNodeModules = path.join(__dirname, 'node_modules');
-
-      // Create path for meteor app packages directory.
-      const meteorPackages = path.join(meteorBuild, 'packages');
-
-      const manifest = getManifest(params.normalModuleFactory.context);
-
-      // Create an alias for each Meteor packages and a loader to extract its
-      // globals.
-      const excluded = new RegExp(self.config.exclude
-        .map(function(exclude){ return '^packages/' + exclude + '\.js$'; })
-        .concat('^app\/app.*\.js$')
-        .join('|'));
-
-      manifest.forEach(function(pckge){
-        if (!excluded.test(pckge.path)) {
-          const match = /^(packages|app)\/(.+)\.js$/.exec(pckge.path);
-          if (!match) return;
-          let packageName = match[2];
-          packageName = packageName.replace('_', ':');
-          compiler.resolvers.normal.apply(new AliasPlugin('described-resolve', {
-            name: 'meteor/' + packageName,
-            alias: path.join(meteorBuild, pckge.path),
-          }, 'resolve'));
-        }
-      });
-
-      compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
-        compiler.resolverFactory.hooks.resolver
-          .for("normal")
-          .tap(PLUGIN_NAME, resolver => {
-            // Create an alias so we can do the context properly using the folder
-            // variable from the meteor config file. If we inject the folder variable
-            // directly in the request.context webpack goes wild.
-            new AliasPlugin('described-resolve', {
-              name: 'meteor-build',
-              alias: meteorBuild,
-            }, 'resolve').apply(resolver);
-
-            new AliasPlugin('described-resolve', {
-              name: 'meteor-packages',
-              alias: meteorPackages,
-              onlyModule: false,
-            }, 'resolve').apply(resolver);
-
-            // Create an alias for the meteor-imports require.
-            new AliasPlugin('described-resolve', {
-              name: 'meteor-imports',
-              alias: path.join(__dirname, './meteor-imports.js'),
-            }, 'resolve').apply(resolver);
-          });
-
-        compiler.resolverFactory.hooks.resolver
-          .for('loader')
-          .tap(PLUGIN_NAME, resolver => {
-            new ModulesInRootPlugin('module', meteorNodeModules, 'resolve').apply(resolver);
-          });
-      });
-    });
-
-    // Don't create modules and chunks for excluded packages.
-    compiler.hooks.normalModuleFactory.tap(PLUGIN_NAME, function (nmf) {
-      const excluded = new RegExp(self.config.exclude
-        .map(function (exclude) { return '^\./' + exclude + '\.js$' })
-        .join('|'));
-
-      nmf.hooks.beforeResolve.tap(PLUGIN_NAME, function (result, callback) {
-        if(!result) return callback();
-        if(excluded.test(result.request)){
-          return callback();
-        }
-        return callback(null, result);
-      });
-
-
-      nmf.hooks.afterResolve.tap(PLUGIN_NAME,  function(result, callback) {
-        // We want to parse modules.js, but that's the only one as the rest relies on internal Meteor require system
-
-        if (result && result.request.match(PACKAGES_REGEX_NOT_MODULES)) {
-          result.parser = {
-            parse: function() {
-            }
-          };
-        }
-        return callback(null, result);
-      });
-
-      // Create path for internal build of the meteor packages.
-      const meteorBuild = getMeteorBuild(nmf.context);
-
-      // Create path for meteor app packages directory.
-      const meteorPackages = path.join(meteorBuild, 'packages');
-
-      const manifest = getManifest(nmf.context);
-
-      const extraRules = [
-        {
-          meteorImports: true,
-          test: /meteor-config$/,
-          include: [__dirname],
-          use: {
-            loader: 'json-string-loader',
-            options: {json: JSON.stringify(self.config)}
-          }
-        },
-        {
-          meteorImports: true,
-          test: PACKAGES_REGEX_NOT_MODULES,
-          loader: 'imports-loader?this=>window',
-        },
-        {
-          meteorImports: true,
-          test: PACKAGES_REGEX_MODULES,
-          loader: path.join(__dirname, 'modules-loader.js')
-        },
-        {
-          meteorImports: true,
-          test: PACKAGES_REGEX_GLOBAL_IMPORTS,
-          loader: path.join(__dirname, 'global-imports-loader.js'),
-          options: self.config
-        },
-        {
-          meteorImports: true,
-          test: /\.css$/,
-          include: [meteorPackages],
-          use: [
-            {loader: 'style-loader'},
-            {loader: 'css-loader'}
-          ]
-        }
-      ];
-      manifest.forEach(function (pckge) {
-        if (!excluded.test(pckge.path)) {
-          const rule = {
-            meteorImports: true,
-            test: new RegExp(escapeForRegEx('.meteor/local/build/programs/web.browser/' + pckge.path)),
-          };
-
-          const match = /^packages\/(.+)\.js$/.exec(pckge.path);
-          if (match) {
-            // Note: this won't match for global-imports from Meteor 1.6.1 and up
-            const packageName = match[1].replace('_', ':');
-            rule.loader = 'exports-loader?Package["' + packageName + '"]';
-          }
-
-          extraRules.push(rule);
-        }
-      });
-      nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules))
-    });
+    ];
+    const nmf = params.normalModuleFactory;
+    nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules));
   }
 }
 
