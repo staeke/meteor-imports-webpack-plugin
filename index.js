@@ -63,15 +63,13 @@ class MeteorImportsPlugin {
       meteorEnv: {
         NODE_ENV: production ? 'production' : undefined
       },
+      stripPackagesWithoutFiles: true,
       exclude: {}
     };
 
     const hardExclude = {
       autoupdate: true,
-      'hot-code-push': true,
-      reload: true,
-      livedata: true,
-      ecmascript: true
+      reload: true
     };
 
     this.config = Object.assign(defaults, this.options);
@@ -155,7 +153,13 @@ class MeteorImportsPlugin {
       {
         meteorImports: true,
         test: PACKAGES_REGEX_NOT_MODULES,
-        loader: 'imports-loader?this=>window',
+        use: [
+          {
+            loader: path.join(__dirname, 'package-loader.js'),
+            options: this.config
+          },
+          {loader: 'imports-loader?this=>window'},
+        ]
       },
       {
         meteorImports: true,
