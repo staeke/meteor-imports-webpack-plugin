@@ -23,7 +23,10 @@ module.exports = function (source) {
   for (let pkg of packages) {
     if (pkg.name === 'global-imports' && !config.globalImports)
       continue;
-    output += 'require("meteor/' + pkg.name + '");\n';
+    if (pkg.source)
+      output += 'window.Package["' + pkg.name + '"] = ' + pkg.source + ';\n';
+    else
+      output += 'require("meteor/' + pkg.name + '");\n';
   }
 
   return output;

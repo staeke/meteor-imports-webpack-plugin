@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const path = require('path');
 const webpack = require('webpack');
 const RuleSet = require('webpack/lib/RuleSet');
@@ -32,17 +33,14 @@ const PLUGIN_NAME = 'MeteorImportsWebpackPlugin';
 
 
 class MeteorImportsPlugin {
-  constructor(config) {
-    config.exclude = [
-      'autoupdate',
-      'hot-code-push',
-      'livedate',
-      'ecmascript',
-    ].concat(config.exclude || []);
-    this.config = config;
+  constructor(options) {
+    this.options = options;
+
+    // TODO: Remove empty packages
   }
 
   apply(compiler) {
+    this.initConfig(compiler.options);
     this.setPaths(compiler);
     this.readPackages();
     compiler.hooks.compile.tap(PLUGIN_NAME, params => {
@@ -56,6 +54,29 @@ class MeteorImportsPlugin {
           this.addAliases(resolver);
         });
     });
+  }
+
+  initConfig(wpConfig) {
+    const defaults = {
+      meteorEnv: {
+        NODE_ENV: undefined
+      },
+      exclude: {}
+    };
+
+    const hardExclude = {
+      autoupdate: true,
+      'hot-code-push': true,
+      reload: true,
+      livedata: true,
+      ecmascript: true
+    };
+
+    this.config = Object.assign(defaults, this.options);
+    const exc = this.config.exclude;
+    if (Array.isArray(exc))
+      this.config.exclude = _.zipObject(exc, exc.map(k => true));
+    this.config.exclude = Object.assign(this.config.exclude, hardExclude);
   }
 
   setPaths(compiler) {
@@ -79,15 +100,24 @@ class MeteorImportsPlugin {
     this.packages = manifest
       .filter(x => x.type === 'js' || x.type === 'css')
       .filter(x => x.path !== 'app/app.js')
-      .filter(x => !this.config.exclude.includes(x))
-      .filter(x => {
+      .map(x => {
         const match = x.path.match(/(packages|app)\/(.+)\.[^.]+$/);
         if (!match) {
           console.error('Unexpected package path', x.path);
-          return false;
+          return null;
         }
-        return true;
-      });
+        const name = match[2];
+        const excludeEntry = this.config.exclude[name];
+        if (excludeEntry === true)
+          return null;
+        if (typeof excludeEntry === 'string')
+          return ({name: name, source: excludeEntry});
+        return ({name: name || x.path, path: x.path});
+      })
+      .filter(x => !!x);
+
+    if (this.config.logIncludedPackages)
+      console.log('Included Meteor packages:', this.packages.map(p => p.name).join(', '));
   }
 
   addAliases(resolver) {
