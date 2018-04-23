@@ -3,6 +3,8 @@ const colors = require('colors/safe');
 
 module.exports = {
   getFileNameWoExt: file => path.basename(file, path.extname(file)),
+
+  /*eslint-disable */
   log(...args) {
     console.log('MeteorImportsWebpackPlugin:', ...args);
   },
@@ -12,4 +14,5 @@ module.exports = {
   logError(msg, ...args) {
     console.log(colors.red('MeteorImportsWebpackPlugin:'), colors.red(msg), ...args);
   },
+  /*eslint-enable */
 };

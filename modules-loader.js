@@ -1,7 +1,7 @@
 const reRequire = /([^\w.])require([^\w])/g;
-const reNpmModules = /^\/+$\s+\/\/\s*\/\/\s*\/\/\s*node_modules\/(?!meteor[\/-])([^\s]*)\.js[\s\/]*?^\/+$(.|\s)*?^\/+$/gm;
+const reNpmModules = /^\/+$\s+\/\/\s*\/\/\s*\/\/\s*node_modules\/(?!meteor[/-])([^\s]*)\.js[\s/]*?^\/+$(.|\s)*?^\/+$/gm;
 
-module.exports = function (source) {
+module.exports = function(source) {
 
   this.cacheable();
 
@@ -9,4 +9,4 @@ module.exports = function (source) {
   const withStrippedModules = toMeteorInternalRequire.replace(reNpmModules, 'arguments[2].exports = require("$1");');
 
   return withStrippedModules;
-}
+};

@@ -38,5 +38,8 @@
     "enhanced-resolve": "^4.0.0",
     "lodash": "~4.17.5",
     "md5": "^2.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1"
   }
 }

@@ -1,4 +1,4 @@
-const {getFileNameWoExt} = require('./utils');
+const {getFileNameWoExt, logWarn} = require('./utils');
 
 module.exports = function(source) {
   const name = getFileNameWoExt(this.resource);
@@ -7,8 +7,8 @@ module.exports = function(source) {
     if (this.query.stripPackagesWithoutFiles)
       return '';
 
-
-    console.log('File', name, 'seems to be empty');
+    if (this.query.logPackagesWithoutFiles)
+      logWarn('File', name, 'seems to not include any file and can probably be excluded');
   }
   return source + ';\nmodule.exports = window.Package["' + name + '"];\n';
 };

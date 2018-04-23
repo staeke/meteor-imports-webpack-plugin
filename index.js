@@ -19,7 +19,6 @@ function arrToPathForRegEx(arr) {
 
 const BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
 const PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
-const PACKAGES_REGEX = new RegExp(arrToPathForRegEx(PACKAGES_PATH_PARTS));
 const PACKAGES_REGEX_NOT_MODULES = new RegExp(
   arrToPathForRegEx(PACKAGES_PATH_PARTS) +
   '\\/(?!modules\\.js)[^/\\\\]+$'
@@ -76,6 +75,7 @@ class MeteorImportsPlugin {
       },
       injectMeteorRuntimeConfig: true,
       logIncludedPackages: false,
+      logPackagesWithoutFiles: false,
 
       // These actually go to page
       meteorEnv: {
@@ -89,7 +89,7 @@ class MeteorImportsPlugin {
 
     let exclude = this.options.exclude || {};
     if (Array.isArray(exclude))
-      exclude = _.zipObject(exclude, exclude.map(_ => true));
+      exclude = _.zipObject(exclude, exclude.map(() => true));
     Object.assign(defaults.exclude, exclude);
 
     this.config = Object.assign(defaults, this.options, {exclude});
@@ -119,7 +119,7 @@ class MeteorImportsPlugin {
       .map(x => {
         const match = x.path.match(/(packages|app)\/(.+)\.[^.]+$/);
         if (!match) {
-          console.error('Unexpected package path', x.path);
+          logError('Unexpected package path', x.path);
           return null;
         }
         const name = match[2];

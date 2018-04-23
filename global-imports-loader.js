@@ -1,4 +1,4 @@
-const reGlobalPackage = /^([^\s=]*).*Package[.\[]'?"?([^.'"]+).*$/gm;
+const reGlobalPackage = /^([^\s=]*).*Package[.[]'?"?([^.'"]+).*$/gm;
 
 module.exports = function(source) {
   this.cacheable();
