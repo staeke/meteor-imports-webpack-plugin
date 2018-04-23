@@ -2,10 +2,9 @@ const fs = require('fs');
 const _ = require('lodash');
 const md5 = require('md5');
 const path = require('path');
-const webpack = require('webpack');
 const RuleSet = require('webpack/lib/RuleSet');
 const AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
-const ModulesInRootPlugin = require('enhanced-resolve/lib/ModulesInRootPlugin');
+const {log, logWarn, logError} = require('./utils');
 
 function escapeForRegEx(str) {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
@@ -35,63 +34,58 @@ const PLUGIN_NAME = 'MeteorImportsWebpackPlugin';
 
 
 class MeteorImportsPlugin {
+  // Properties:
+  // isDevServer;
+  // options;
+  // compiler;
+  // config;
+
   constructor(options) {
     this.options = options;
-
-    // TODO: Remove empty packages
   }
 
   apply(compiler) {
-    this.initConfig(compiler.options);
-    this.setPaths(compiler);
+    this.compiler = compiler;
+
+    this.initConfig();
+    this.setPaths();
     this.readPackages();
+
     compiler.hooks.compile.tap(PLUGIN_NAME, params => {
       this.addLoaders(params);
     });
 
     compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
-      compiler.resolverFactory.hooks.resolver
-        .for("normal")
-        .tap(PLUGIN_NAME, resolver => {
-          this.addAliases(resolver);
-        });
+      compiler.resolverFactory.hooks.resolver.for('normal').tap(PLUGIN_NAME, resolver => {
+        this.addAliases(resolver);
+      });
     });
 
-    this.setupAutoupdate(compiler);
+    this.setupAutoupdateEmit();
   }
 
-  initConfig(wpConfig) {
-    const production = wpConfig.mode === 'production';
-
+  initConfig() {
     const defaults = {
+      exclude: {
+        autoupdate: true
+      },
       meteorEnv: {
         NODE_ENV: production ? 'production' : undefined
       },
-      autoupdate: 'auto',
-      reload: 'auto',
       stripPackagesWithoutFiles: true,
       emitAutoupdateVersion: 'auto',
-      exclude: {}
     };
 
-    this.config = Object.assign(defaults, this.options);
-    const exc = this.config.exclude;
-    if (Array.isArray(exc))
-      this.config.exclude = _.zipObject(exc, exc.map(k => true));
+    let exclude = this.options.exclude || {};
+    if (Array.isArray(exclude))
+      exclude = _.zipObject(exclude, exclude.map(_ => true));
+    Object.assign(defaults.exclude, exclude);
 
-    const useAutoupdate = this.config.autoupdate || (this.config.autoupdate === 'auto' && production);
-    if (!useAutoupdate) {
-      this.config.exclude['autoupdate'] = true;
-    }
-
-    const useReload = this.config.reload || (this.config.reload === 'auto' && production);
-    if (!useReload) {
-      this.config.exclude['reload'] = true;
-    }
+    this.config = Object.assign(defaults, this.options, {exclude});
   }
 
-  setPaths(compiler) {
-    const context = compiler.context;
+  setPaths() {
+    const context = this.compiler.context;
 
     this.meteorBuild = this.config.meteorProgramsFolder
       ? path.resolve(context, this.config.meteorProgramsFolder, 'web.browser')
@@ -123,12 +117,31 @@ class MeteorImportsPlugin {
           return null;
         if (typeof excludeEntry === 'string')
           return ({name: name, source: excludeEntry});
+        if (typeof excludeEntry === 'object') {
+          if (!excludeEntry.mode) {
+            logWarn('Unrecognized exclude entry for package ' + name);
+            return true;
+          }
+          if (excludeEntry.mode === this.getMode())
+            return true;
+        }
+
+        if (name === 'autocomplete' && this.isDevServer) {
+          logWarn('You have specified using autoupdate: true while running webpack-dev-server. ' +
+            'This typically leads to a ever reloading page if you don\'t start/stop meteor all ' +
+            'the time and provide environment variable AUTOUPDATE_VERSION. ' +
+            'Are you sure this is what you want to do?');
+        }
         return ({name: name || x.path, path: x.path});
       })
       .filter(x => !!x);
 
     if (this.config.logIncludedPackages)
-      console.log('Included Meteor packages:', this.packages.map(p => p.name).join(', '));
+      log('Included Meteor packages:', this.packages.map(p => p.name).join(', '));
+  }
+
+  getMode() {
+    return this.compiler.options.mode || 'development';
   }
 
   addAliases(resolver) {
@@ -197,32 +210,32 @@ class MeteorImportsPlugin {
     nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules));
   }
 
-  setupAutoupdate(compiler) {
-    if (this.config.emitAutoupdateVersion) {
-      const isDevServer = process.argv.find(v => v.includes('webpack-dev-server'));
-      if (isDevServer && this.config.emitAutoupdateVersion !== 'force') {
-        console.warn('Not patching html with auto update version as you are running webpack-dev-server. You would otherwise probably face a ever reloading page. If this is really what you want, please specify emitAutoupdateVersion: "force"');
-        return;
-      }
+  setupAutoupdateEmit() {
+    if (this.config.exclude['autoupdate'] === true || !this.config.emitAutoupdateVersion)
+      return;
 
-      compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
-        compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
-          compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tap(PLUGIN_NAME, data => {
-            const hash = md5(data.html);
-            data.html = data.html.replace(/(<\s*head\s*>)/,
-              `$1\n<script>window.__meteor_runtime_config__ = {autoupdateVersion:"${hash}"}</script>`);
+    this.compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
+      compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
+        let afterHtmlHook = compilation.hooks.htmlWebpackPluginAfterHtmlProcessing;
+        if (!afterHtmlHook) {
+          logError('The emitAutoupdateVersion setting requires HtmlWebpackPlugin being added and it wasn\'t found.');
+          return;
+        }
+        afterHtmlHook.tap(PLUGIN_NAME, data => {
+          const hash = md5(data.html);
+          data.html = data.html.replace(/(<\s*head\s*>)/,
+            `$1\n<script>window.__meteor_runtime_config__ = {autoupdateVersion:"${hash}"}</script>`);
 
-            // Also kick off an async write to the output file
-            let outputPath = compiler.options.output.path;
-            const outputFile = path.join(outputPath, 'autoupdate_version');
-            fs.writeFile(outputFile, hash, err => {
-              if (err) console.error(err);
-              else console.log('Wrote autoupdate_version file to ', outputFile);
-            })
+          // Also kick off an async write to the output file
+          let outputPath = compiler.options.output.path;
+          const outputFile = path.join(outputPath, 'autoupdate_version');
+          fs.writeFile(outputFile, hash, err => {
+            if (err) logError('Unable to write autoupdate_version file', err);
+            else log('Wrote autoupdate_version file to ', outputFile);
           });
         });
       });
-    }
+    });
   }
 }
 
