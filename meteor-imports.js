@@ -16,10 +16,10 @@ module.exports = function (/*source*/) {
 
   if (!config.DDP_DEFAULT_CONNECTION_URL) {
     const port = config.DDP_DEFAULT_CONNECTION_PORT || 3000;
-    output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "/" + window.location.hostname + ":" + "' + port + '";\n';
+    output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "//" + window.location.hostname + ":" + "' + port + '";\n';
   }
   if (!config.ROOT_URL) {
-    output += 'config.ROOT_URL = window.location.protocol + "/" + window.location.host;\n';
+    output += 'config.ROOT_URL = window.location.protocol + "//" + window.location.host;\n';
   }
 
   // Require all packages
