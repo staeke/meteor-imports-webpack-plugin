@@ -41,7 +41,7 @@ class MeteorImportsPlugin {
 
   constructor(options) {
     this.options = options;
-    this.isDevServer = process.argv.find(v => v.includes('webpack-dev-server'));
+    this.isDevServer = !!process.argv.find(v => v.includes('webpack-dev-server'));
   }
 
   apply(compiler) {
@@ -71,7 +71,7 @@ class MeteorImportsPlugin {
       stripPackagesWithoutFiles: true,
       emitAutoupdateVersion: true,
       exclude: {
-        autoupdate: !this.isDevServer
+        autoupdate: this.isDevServer
       },
       injectMeteorRuntimeConfig: true,
       logIncludedPackages: false,
