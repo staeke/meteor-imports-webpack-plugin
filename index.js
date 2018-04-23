@@ -42,6 +42,7 @@ class MeteorImportsPlugin {
 
   constructor(options) {
     this.options = options;
+    this.isDevServer = process.argv.find(v => v.includes('webpack-dev-server'));
   }
 
   apply(compiler) {
@@ -67,7 +68,7 @@ class MeteorImportsPlugin {
   initConfig() {
     const defaults = {
       exclude: {
-        autoupdate: true
+        autoupdate: !this.isDevServer
       },
       meteorEnv: {
         NODE_ENV: production ? 'production' : undefined
