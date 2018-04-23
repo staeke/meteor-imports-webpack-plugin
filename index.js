@@ -36,7 +36,6 @@ class MeteorImportsPlugin {
   // Properties:
   // isDevServer;
   // options;
-  // compiler;
   // config;
 
   constructor(options) {
@@ -45,10 +44,8 @@ class MeteorImportsPlugin {
   }
 
   apply(compiler) {
-    this.compiler = compiler;
-
-    this.initConfig();
-    this.setPaths();
+    this.initConfig(compiler);
+    this.setPaths(compiler);
     this.readPackages();
 
     compiler.hooks.compile.tap(PLUGIN_NAME, params => {
@@ -61,10 +58,10 @@ class MeteorImportsPlugin {
       });
     });
 
-    this.setupAutoupdateEmit();
+    this.setupAutoupdateEmit(compiler);
   }
 
-  initConfig() {
+  initConfig(compiler) {
     const defaults = {
       emitAutoupdateVersion: true,
       exclude: {
@@ -81,7 +78,7 @@ class MeteorImportsPlugin {
       DDP_DEFAULT_CONNECTION_PORT: undefined,
       DDP_DEFAULT_CONNECTION_URL: undefined,
       meteorEnv: {
-        NODE_ENV: this.getMode() === 'production' ? 'production' : undefined
+        NODE_ENV: this.getMode(compiler) === 'production' ? 'production' : undefined
       },
       PUBLIC_SETTINGS: undefined,
       ROOT_URL: undefined,
@@ -94,8 +91,8 @@ class MeteorImportsPlugin {
     this.config = Object.assign(defaults, this.options, {exclude});
   }
 
-  setPaths() {
-    const context = this.compiler.context;
+  setPaths(compiler) {
+    const context = compiler.context;
 
     this.meteorBuild = this.config.meteorProgramsFolder
       ? path.resolve(context, this.config.meteorProgramsFolder, 'web.browser')
@@ -150,8 +147,8 @@ class MeteorImportsPlugin {
       log('Included Meteor packages:', this.packages.map(p => p.name).join(', '));
   }
 
-  getMode() {
-    return this.compiler.options.mode || 'development';
+  getMode(compiler) {
+    return compiler.options.mode || 'development';
   }
 
   addAliases(resolver) {
@@ -220,11 +217,11 @@ class MeteorImportsPlugin {
     nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules));
   }
 
-  setupAutoupdateEmit() {
+  setupAutoupdateEmit(compiler) {
     if (this.config.exclude['autoupdate'] === true || !this.config.emitAutoupdateVersion)
       return;
 
-    this.compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
+    compiler.hooks.afterPlugins.tap(PLUGIN_NAME, compiler => {
       compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
         let afterHtmlHook = compilation.hooks.htmlWebpackPluginAfterHtmlProcessing;
         if (!afterHtmlHook) {
