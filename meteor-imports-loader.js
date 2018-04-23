@@ -24,8 +24,6 @@ module.exports = function (source) {
 
   // Require all packages
   for (let pkg of packages) {
-    if (pkg.name === 'global-imports' && !config.globalImports)
-      continue;
     if (pkg.source)
       output += 'window.Package["' + pkg.name + '"] = ' + pkg.source + ';\n';
     else
