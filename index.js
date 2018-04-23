@@ -160,7 +160,7 @@ class MeteorImportsPlugin {
     new AliasPlugin('described-resolve', {
       name: 'meteor-imports',
       onlyModule: true,
-      alias: path.join(__dirname, './meteor-imports-loader.js'),
+      alias: path.join(__dirname, './meteor-imports.js'),
     }, 'resolve').apply(resolver);
 
     // Provide aliases for all packages so that they can be imported
@@ -178,8 +178,8 @@ class MeteorImportsPlugin {
     const extraRules = [
       {
         meteorImports: true,
-        test: /meteor-imports-loader\.js/,
-        loader: path.join(__dirname, 'meteor-imports-loader.js'),
+        test: /meteor-imports\.js/,
+        loader: path.join(__dirname, 'meteor-imports.js'),
         options: {
           packages: this.packages,
           config: this.config
