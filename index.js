@@ -66,25 +66,25 @@ class MeteorImportsPlugin {
 
   initConfig() {
     const defaults = {
-      meteorFolder: undefined,
-      meteorProgramsFolder: undefined,
-      stripPackagesWithoutFiles: true,
       emitAutoupdateVersion: true,
       exclude: {
-        autoupdate: this.isDevServer
+        autoupdate: this.isDevServer,
       },
       injectMeteorRuntimeConfig: true,
       logIncludedPackages: false,
       logPackagesWithoutFiles: false,
+      meteorFolder: undefined,
+      meteorProgramsFolder: undefined,
+      stripPackagesWithoutFiles: true,
 
       // These actually go to page
+      DDP_DEFAULT_CONNECTION_PORT: undefined,
+      DDP_DEFAULT_CONNECTION_URL: undefined,
       meteorEnv: {
         NODE_ENV: this.getMode() === 'production' ? 'production' : undefined
       },
-      DDP_DEFAULT_CONNECTION_URL: undefined,
-      DDP_DEFAULT_CONNECTION_PORT: undefined,
+      PUBLIC_SETTINGS: undefined,
       ROOT_URL: undefined,
-      PUBLIC_SETTINGS: undefined
     };
 
     let exclude = this.options.exclude || {};
