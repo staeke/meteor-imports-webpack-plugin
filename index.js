@@ -90,8 +90,7 @@ class MeteorImportsPlugin {
     let exclude = this.options.exclude || {};
     if (Array.isArray(exclude))
       exclude = _.zipObject(exclude, exclude.map(() => true));
-    Object.assign(defaults.exclude, exclude);
-
+    exclude = Object.assign({}, defaults.exclude, exclude);
     this.config = Object.assign(defaults, this.options, {exclude});
   }
 
