@@ -5,6 +5,7 @@ const path = require('path');
 const RuleSet = require('webpack/lib/RuleSet');
 const AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
 const {log, logWarn, logError} = require('./utils');
+const MeteorPackageModule = require('./MeteorPackageModule');
 
 function escapeForRegEx(str) {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
@@ -50,6 +51,11 @@ class MeteorImportsPlugin {
 
     compiler.hooks.compile.tap(PLUGIN_NAME, params => {
       this.addLoaders(params);
+
+      params.normalModuleFactory.hooks.createModule.tap(PLUGIN_NAME, result => {
+        if (result.userRequest.match(PACKAGES_REGEX_NOT_MODULES))
+          return new MeteorPackageModule(result);
+      })
     });
 
     compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
