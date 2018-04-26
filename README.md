@@ -6,7 +6,7 @@ This plugin lets you import any Meteor package like if it was a real NPM package
 
 ## How does it work
 
-This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.
+This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.  Your top-level project directory must *not* be a meteor project (that is, it should not contain a `.meteor` directory).
 
 If you are going to use a Meteor server, then a good name could be `server`. If not, maybe just `meteor`. We'll stick to `server` for this guide.
 
