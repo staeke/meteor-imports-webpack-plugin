@@ -195,7 +195,6 @@ class MeteorImportsPlugin {
             loader: path.join(__dirname, 'package-loader.js'),
             options: this.config
           },
-          {loader: 'imports-loader?this=>window'},
         ]
       },
       {
