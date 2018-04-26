@@ -7,6 +7,7 @@ module.exports = function (/*source*/) {
   const packages = this.query.packages;
 
   const clientConfig = _.omit(config,
+    'emitAutoupdateVersion',
     'exclude',
     'injectMeteorRuntimeConfig',
     'logIncludedPackages',
