@@ -6,6 +6,7 @@ const RuleSet = require('webpack/lib/RuleSet');
 const AliasPlugin = require('enhanced-resolve/lib/AliasPlugin');
 const {log, logWarn, logError} = require('./utils');
 const MeteorPackageModule = require('./MeteorPackageModule');
+const MeteorPackageBridgeModule = require('./MeteorPackageBridgeModule');
 
 function escapeForRegEx(str) {
   return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
@@ -47,23 +48,31 @@ class MeteorImportsPlugin {
   apply(compiler) {
     this.initConfig(compiler);
     this.setPaths(compiler);
-    this.readPackages();
 
     compiler.hooks.compile.tap(PLUGIN_NAME, params => {
-      this.addLoaders(params);
+      const nmf = params.normalModuleFactory;
 
-      params.normalModuleFactory.hooks.createModule.tap(PLUGIN_NAME, result => {
+      // Add special loaders for modules/global-imports/packages to load them in the right way
+      this.addLoaders(nmf);
+
+      // Add bridge modules from webpack's module system to meteor's for all dependencies starting with "meteor/"
+      this.setupPackageBridgeModules(nmf);
+
+      // We don't want webpack's parsing of meteor packages (except modules) since they're using Meteor's package system
+      nmf.hooks.createModule.tap(PLUGIN_NAME, result => {
         if (result.userRequest.match(PACKAGES_REGEX_NOT_MODULES))
           return new MeteorPackageModule(result);
-      })
-    });
-
-    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
-      compiler.resolverFactory.hooks.resolver.for('normal').tap(PLUGIN_NAME, resolver => {
-        this.addAliases(resolver);
       });
     });
 
+    // Add alias for meteor-imports
+    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, compiler => {
+      compiler.resolverFactory.hooks.resolver.for('normal').tap(PLUGIN_NAME, resolver => {
+        this.addAlias(resolver);
+      });
+    });
+
+    // Set up mechanism for injecting and emitting autoupdate information
     this.setupAutoupdateEmit(compiler);
   }
 
@@ -95,6 +104,8 @@ class MeteorImportsPlugin {
       exclude = _.zipObject(exclude, exclude.map(() => true));
     exclude = Object.assign({}, defaults.exclude, exclude);
     this.config = Object.assign(defaults, this.options, {exclude});
+
+    this.mode = compiler.options.mode || 'development';
   }
 
   setPaths(compiler) {
@@ -107,57 +118,7 @@ class MeteorImportsPlugin {
     this.meteorPackages = path.join(this.meteorBuild, 'packages');
   }
 
-  readPackages() {
-    let manifest;
-    try {
-      manifest = require(this.meteorBuild + '/program.json').manifest;
-    } catch (e) {
-      throw Error('Run Meteor at least once and wait for startup to complete.');
-    }
-
-    this.packages = manifest
-      .filter(x => x.type === 'js' || x.type === 'css')
-      .filter(x => x.path !== 'app/app.js')
-      .map(x => {
-        const match = x.path.match(/(packages|app)\/(.+)\.[^.]+$/);
-        if (!match) {
-          logError('Unexpected package path', x.path);
-          return null;
-        }
-        const name = match[2];
-        const excludeEntry = this.config.exclude[name];
-        if (excludeEntry === true)
-          return null;
-        if (typeof excludeEntry === 'string')
-          return ({name: name, source: excludeEntry});
-        if (typeof excludeEntry === 'object') {
-          if (!excludeEntry.mode) {
-            logWarn('Unrecognized exclude entry for package ' + name);
-            return true;
-          }
-          if (excludeEntry.mode === this.getMode())
-            return true;
-        }
-
-        if (name === 'autocomplete' && this.isDevServer) {
-          logWarn('You have specified using autoupdate: true while running webpack-dev-server. ' +
-            'This typically leads to a ever reloading page if you don\'t start/stop meteor all ' +
-            'the time and provide environment variable AUTOUPDATE_VERSION. ' +
-            'Are you sure this is what you want to do?');
-        }
-        return ({name: name || x.path, path: x.path});
-      })
-      .filter(x => !!x);
-
-    if (this.config.logIncludedPackages)
-      log('Included Meteor packages:', this.packages.map(p => p.name).join(', '));
-  }
-
-  getMode(compiler) {
-    return compiler.options.mode || 'development';
-  }
-
-  addAliases(resolver) {
+  addAlias(resolver) {
     // Provide the alias "meteor-imports"
     new AliasPlugin('described-resolve', {
       name: 'meteor-imports',
@@ -165,26 +126,18 @@ class MeteorImportsPlugin {
       alias: path.join(__dirname, './meteor-imports.js'),
     }, 'resolve').apply(resolver);
 
-    // Provide aliases for all packages so that they can be imported
-    for (let pkg of this.packages) {
-      if (!pkg.path) continue; // can be just a source string
-      new AliasPlugin('described-resolve', {
-        name: 'meteor/' + pkg.name,
-        onlyModule: true,
-        alias: path.join(this.meteorBuild, pkg.path),
-      }, 'resolve').apply(resolver);
-    }
   }
 
-  addLoaders(params) {
+  addLoaders(nmf) {
     const extraRules = [
       {
         meteorImports: true,
-        test: /meteor-imports\.js/,
+        test: /meteor-imports\.js$/,
         loader: path.join(__dirname, 'meteor-imports.js'),
         options: {
-          packages: this.packages,
-          config: this.config
+          mode: this.mode,
+          config: this.config,
+          meteorBuild: this.meteorBuild
         }
       },
       {
@@ -218,8 +171,23 @@ class MeteorImportsPlugin {
         ]
       }
     ];
-    const nmf = params.normalModuleFactory;
     nmf.ruleSet = new RuleSet(nmf.ruleSet.rules.concat(extraRules));
+  }
+
+  setupPackageBridgeModules(nmf) {
+    // We must (?) hook directly on normalModuleFactory.hooks.resolver in order to return a direct module,
+    // which in turn is one of few ways to direct a request to a code string without access the file system
+    const resolverHook = nmf.hooks.resolver;
+    let prevResolver = resolverHook.call(null);
+    resolverHook.tap(PLUGIN_NAME, () => (data, callback) => {
+      const request = data.request;
+
+      if (request.startsWith('meteor/'))
+        return callback(null, new MeteorPackageBridgeModule(request, nmf));
+
+      prevResolver.call(this, data, callback);
+    });
+    return nmf;
   }
 
   setupAutoupdateEmit(compiler) {
