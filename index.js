@@ -80,7 +80,7 @@ class MeteorImportsPlugin {
     const defaults = {
       emitAutoupdateVersion: true,
       exclude: {
-        autoupdate: this.isDevServer,
+        autoupdate: true
       },
       injectMeteorRuntimeConfig: true,
       logIncludedPackages: false,
@@ -111,6 +111,14 @@ class MeteorImportsPlugin {
     // Validate config
     if (this.options.settingsFilePath && this.options.PUBLIC_SETTINGS)
       logWarn('Both "settingsFilePath" or "PUBLIC_SETTINGS" specified. "settingsFilePath" will be ignored.')
+
+    const isDevServer = !!process.argv.find(v => v.includes('webpack-dev-server'));
+    if (exclude.autoupdate === false && isDevServer) {
+      logWarn('You have specified using autoupdate: true while running webpack-dev-server. ' +
+        'This typically leads to an ever reloading page if you don\'t start/stop meteor all ' +
+        'the time and provide environment variable AUTOUPDATE_VERSION. ' +
+        'Are you sure this is what you want to do?');
+    }
 
     if (this.config.DDP_DEFAULT_CONNECTION_PORT) {
       logWarn('"DDP_DEFAULT_CONNECTION_PORT" is depcreated and now called "ddpDefaultConnectionPort');
