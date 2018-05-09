@@ -87,10 +87,11 @@ class MeteorImportsPlugin {
       logPackagesWithoutFiles: false,
       meteorFolder: undefined,
       meteorProgramsFolder: undefined,
+      settingsFilePath: undefined,
       stripPackagesWithoutFiles: true,
+      ddpDefaultConnectionPort: 3000,
 
-      // These actually go to page
-      DDP_DEFAULT_CONNECTION_PORT: undefined,
+      // These actually go directly to page
       DDP_DEFAULT_CONNECTION_URL: undefined,
       meteorEnv: {
         NODE_ENV: this.getMode(compiler) === 'production' ? 'production' : undefined
@@ -106,6 +107,19 @@ class MeteorImportsPlugin {
     this.config = Object.assign(defaults, this.options, {exclude});
 
     this.mode = compiler.options.mode || 'development';
+
+    // Validate config
+    if (this.options.settingsFilePath && this.options.PUBLIC_SETTINGS)
+      logWarn('Both "settingsFilePath" or "PUBLIC_SETTINGS" specified. "settingsFilePath" will be ignored.')
+
+    if (this.config.DDP_DEFAULT_CONNECTION_PORT) {
+      logWarn('"DDP_DEFAULT_CONNECTION_PORT" is depcreated and now called "ddpDefaultConnectionPort');
+      this.config.ddpDefaultConnectionPort = this.config.DDP_DEFAULT_CONNECTION_PORT
+    }
+
+    if (this.config.ddpDefaultConnectionPort && this.config.DDP_DEFAULT_CONNECTION_URL) {
+      logWarn('Both "DDP_DEFAULT_CONNETION_URL" and "ddpDefaultConnectionPort" specified. "ddpDefaultConnectionPort" will be ignored.')
+    }
   }
 
   setPaths(compiler) {
@@ -126,6 +140,12 @@ class MeteorImportsPlugin {
       alias: path.join(__dirname, './meteor-imports.js'),
     }, 'resolve').apply(resolver);
 
+    // Provide the alias "meteor-imports"
+    new AliasPlugin('described-resolve', {
+      name: 'meteor-config',
+      onlyModule: true,
+      alias: path.join(__dirname, './meteor-config.js'),
+    }, 'resolve').apply(resolver);
   }
 
   addLoaders(nmf) {
@@ -138,6 +158,14 @@ class MeteorImportsPlugin {
           mode: this.mode,
           config: this.config,
           meteorBuild: this.meteorBuild
+        }
+      },
+      {
+        meteorImports: true,
+        test: /meteor-config\.js$/,
+        loader: path.join(__dirname, 'meteor-config.js'),
+        options: {
+          config: this.config
         }
       },
       {

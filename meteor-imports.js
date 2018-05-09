@@ -1,5 +1,4 @@
 const path = require('path');
-const _ = require('lodash');
 const {log, logWarn, logError} = require('./utils');
 
 
@@ -53,37 +52,14 @@ function readPackages(callback) {
 module.exports = function(/*source*/) {
   this.async();
 
-  const {config, meteorBuild} = this.query;
-
   readPackages.call(this, (err, packages) => {
     if (err) return this.callback(err);
 
+    const {config, meteorBuild} = this.query;
+
     let output = '';
-    const clientConfig = _.omit(config,
-      'emitAutoupdateVersion',
-      'exclude',
-      'injectMeteorRuntimeConfig',
-      'logIncludedPackages',
-      'logPackagesWithoutFiles',
-      'meteorFolder',
-      'packages',
-      'reload',
-      'stripPackagesWithoutFiles'
-    );
-    const jsonConfig = JSON.stringify(clientConfig);
-
-    if (config.injectMeteorRuntimeConfig !== false) {
-      output += 'var config = window.__meteor_runtime_config__ || (window.__meteor_runtime_config__ = {});\n';
-      output += `Object.assign(config, ${jsonConfig});\n`;
-    }
-
-    if (!config.DDP_DEFAULT_CONNECTION_URL) {
-      const port = config.DDP_DEFAULT_CONNECTION_PORT || 3000;
-      output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "//" + window.location.hostname + ":" + "' + port + '";\n';
-    }
-    if (!config.ROOT_URL) {
-      output += 'config.ROOT_URL = window.location.protocol + "//" + window.location.host;\n';
-    }
+    if (config.injectMeteorRuntimeConfig !== false)
+      output += 'require("meteor-config");\n';
 
     // Require all packages
     for (let pkg of packages) {
