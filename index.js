@@ -36,13 +36,12 @@ const PLUGIN_NAME = 'MeteorImportsWebpackPlugin';
 
 class MeteorImportsPlugin {
   // Properties:
-  // isDevServer;
-  // options;
-  // config;
+  //  options;
+  //  config;
+  //  mode
 
   constructor(options) {
     this.options = options;
-    this.isDevServer = !!process.argv.find(v => v.includes('webpack-dev-server'));
   }
 
   apply(compiler) {
@@ -77,6 +76,8 @@ class MeteorImportsPlugin {
   }
 
   initConfig(compiler) {
+    const isProduction = this.mode === 'production';
+
     const defaults = {
       emitAutoupdateVersion: true,
       exclude: {
@@ -94,7 +95,7 @@ class MeteorImportsPlugin {
       // These actually go directly to page
       DDP_DEFAULT_CONNECTION_URL: undefined,
       meteorEnv: {
-        NODE_ENV: this.getMode(compiler) === 'production' ? 'production' : undefined
+        NODE_ENV: isProduction ? 'production' : undefined
       },
       PUBLIC_SETTINGS: undefined,
       ROOT_URL: undefined,
