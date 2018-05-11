@@ -83,6 +83,7 @@ class MeteorImportsPlugin {
       exclude: {
         autoupdate: true
       },
+      excludeGlobals: [],
       injectMeteorRuntimeConfig: true,
       logIncludedPackages: false,
       logPackagesWithoutFiles: false,

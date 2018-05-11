@@ -1,8 +1,49 @@
 # Meteor Imports Webpack Plugin
 
-This plugin lets you import any Meteor package like if it was a real NPM package. It is useful when you want to use some of the Meteor tools (or even a Meteor server) but you prefer to use Webpack for the client build instead of the Meteor build system.
+This plugin bridges Meteor with Webpack and allows you to build Meteor apps with Webpack, and/or to import any Meteor package like if it was a standard NPM package. This is useful if:
+
+- you want to use just some of the Meteor tools but have your "base" outside the Meteor ecosystem
+- you want better build performance for client builds in Meteor apps, not least because of Hot Module Reload in Webpack
+- you want source maps while using minification in production builds
+- you want smaller build outputs and more control (e.g. tweaking minification and chunk separation) in client production builds for Meteor apps.
 
 ----
+
+### Notes on versions/Webpack 4
+For Webpack < 4, use version `^2.0.0`. See doumentation at https://github.com/jedwards1211/meteor-imports-webpack-plugin/blob/f76931e6c9ac59058d30d50d2633c7e0f6e95fe5/README.md
+ 
+The rest of this page applies to Webpack >= 4, and version `^3.0.0`
+
+
+## Get started (TL;DR)
+Put your Meteor app in a subfolder called `server`
+
+Install this plugin
+
+```bash
+npm install meteor-imports-webpack-plugin
+```
+
+Setup webpack and add to your `webpack.config.js`:
+
+```javascript
+const MeteorImportsWebpackPlugin = require('meteor-imports-webpack-plugin');
+...
+plugins: [
+	new MeteorImportsWebpackPlugin({
+	  meteorFolder: 'server'
+	})
+]
+```
+
+Then run:
+
+```bash
+# Start the webpack-dev-server in one terminal window.
+./node_modules/.bin/webpack-dev-server # http://localhost:8080
+# And the Meteor server in another.
+cd server && meteor # http://localhost:3000
+```
 
 ## How does it work
 
@@ -51,102 +92,64 @@ module.exports = {
 ```
 
 
-And finally, **include this import line** in your client entry point.
+And finally, include this import line in your client entry point. 
 
 ```javascript
 require('meteor-imports'); // or import 'meteor-imports';
 ```
 
-## Configuration
+From version 3 of this plugin, this line isn't necessary, as long as you import anything beginning with "meteor", e.g. `import {Meteor} from "meteor/meteor"`. But in order to better control when Meteor (and packages) load, you can still include that line:
 
-The `config` object passed to the plugin must contain at least these properties:
+## Configuration options
+
+The `config` object passed to the plugin must contain at least `meteorFolder` (or `meteorProgramsFolder`). For example:
 
 ```javascript
 new MeteorImportsPlugin({
-  ROOT_URL: 'http://localhost:3000/',
-  DDP_DEFAULT_CONNECTION_URL: 'http://localhost:3000/',
-  PUBLIC_SETTINGS: {},
   meteorFolder: 'server',
-  meteorEnv: { NODE_ENV: 'development' },
-  exclude: ['ecmascript'],
-  excludeGlobals: ['_']
+  settingsFilePath: 'server/settings.json'
 })
 ```
 
-All the `config` object is passed to `__meteor_runtime_config__` variable so if you need to pass anything else, you can.
+Only the options with names in capital letters will be passed directly to Meteor's `__meteor_runtime_config__` object. However, any additional options added by you not listed here will also be included. So that's a way of passing options not listed here.
 
-#### config.injectMeteorRuntimeConfig
+All possible configuration options below
 
-If `injectMeteorRuntimeConfig` is false, `meteor-imports` will not set `window.__meteor_runtime_config__`, and you don't
-need to include any of the relevant variables like `ROOT_URL` in the options.  Use this option if you would like to
-inject `__meteor_runtime_config__` in your own SSR.
+#### Basic setup
+Configuration option|Default|Description
+---|---|---|---|---
+**`meteorFolder`**|(required)|The subfolder where your Meteor project is located. It can be an absolute path as well.
+... OR **`meteorProgramsFolder`**| |(Overrides `meteorFolder`) the path to the `programs` folder within your `meteor` folder or the result of `meteor build --directory`.
+**`settingsFilePath`**| |Provide a path to a Meteor settings file and this plugin will read the `public` property (just like Meteor) and provide it as normal on `Meteor.settings.public`. Note that by setting this property rather than `PUBLIC_SETTINGS` below you will get Hot Module Reload which resets `Meteor.settings.public` and webpack dependency set up on that file.
+**`ddpDefaultConnectionPort `**|`3000`|no|...
 
-#### config.meteorFolder
+#### Advanced setup
+Configuration option|Default|Description
+---|---|---|---|---
+`injectMeteorRuntimeConfig `|`true`|If `injectMeteorRuntimeConfig` is `false`, `meteor-imports` will not set `window.__meteor_runtime_config__`, and you don't need to include any of the relevant variables like `ROOT_URL` in the options.  Use this option if you would like to inject `__meteor_runtime_config__` in your own SSR.
+`DDP_DEFAULT_CONNECTION_URL `|The current base url, but with port `ddpDefaultConnectionPort`|This is the url Meteor uses to access the server.
+`meteorEnv `|**webpack mode: "production"**<br>`{NODE_ENV: 'production'}`<br>**else**<br>`{}`|Meteor's "environment variables" in the browser
+`PUBLIC_SETTINGS `| |The equivalent of the property `public` of [Meteor's settings.json](http://docs.meteor.com/#/full/meteor_settings) file. You can still use a `settings.json` for your server or even import it from Webpack:
+`ROOT_URL `|The current base url|Used by e.g. [Meteor.absoluteUrl](https://docs.meteor.com/api/core.html#Meteor-absoluteUrl)
 
-The subfolder where your Meteor project is located. It can be an absolute path as well.
+#### Excluding/Replacing packages
+Certain packages can be excluded. Others can be replaced. By default, the `autoupdate` package is excluded (see below). For instance, you could use the following configuration:
 
 ```javascript
 new MeteorImportsPlugin({
-  ...
-  meteorFolder: 'meteor'
-})
+    meteorFolder: 'server,
+    exclude: {
+    	// 'global-imports': true,
+    	reload: true,
+    	'hwillson:stub-collections': true,
+	    autoupdate: {mode:'development'},
+        'ecmascript-runtime-client': '{Map,Symbol,Set}'
+    },
+    excludeGlobals: ['ecmascript-runtime-client', '_']
+}
 ```
 
-#### config.meteorProgramsFolder
-
-(Overrides `config.meteorFolder`) the path to the `programs` folder within your `meteor` folder or the result of
-`meteor build --directory`.
-
-#### config.DDP_DEFAULT_CONNECTION_URL
-
-If you are using a Meteor server, point `DDP_DEFAULT_CONNECTION_URL` to your server url. If you are developing in local, start your Meteor server and Webpack-dev-server in different ports.
-
-```bash
-# Start the webpack-dev-server in one terminal window.
-webpack-dev-server # http://localhost:8080
-# And the Meteor server in another.
-cd server && meteor # http://localhost:3000
-```
-
-#### config.PUBLIC_SETTINGS
-
-`PUBLIC_SETTINGS` is the equivalent to the property `public` of [Meteor's settings.json](http://docs.meteor.com/#/full/meteor_settings) file. You can still use a `settings.json` for your server or even import it from Webpack:
-
-```javascript
-var meteorSettings = require('./server/settings.json');
-
-...
-new MeteorImportsPlugin({
-  ...
-  PUBLIC_SETTINGS: meteorSettings.public
-})
-```
-
-Finally, you can use the settings using `Meteor.settings.public` just like you are used to.
-
-#### config.exclude
-
-If you want to exclude some Meteor core packages you can use the optional `exclude` property.
-
-For example, if you are not going to use DDP you can exclude all its related packages:
-
-```javascript
-new MeteorImportsPlugin({
-  ...
-  exclude: [
-    'ddp-common',
-    'ddp-client',
-    'ddp'
-  ]
-})
-```
-
-This is useful only for the core packages. If you don't to use a Meteor package you added, you should remove it using `meteor remove some:package`.
-
-By default, these core packages are excluded: `'autoupdate',
-'hot-code-push',
-'liveupdate',
-'reload', 'ecmascript'` beucase they are useless in Webpack.
+However, this is useful only for the core packages. If you don't to use a Meteor package you added, you should remove it using `meteor remove some:package`.
 
 You can get a list of the currently used packages in your meteor `program.json` file:
 
@@ -155,51 +158,40 @@ cd server/.meteor/local/build/programs/web.browser/
 cat program.json
 ```
 
-If you find that any other package is not useful anymore let me know and I will exclude them by default as well.
+Configuration option|Default|Description
+---|---|---|---|---
+`exclude`|`{autoupdate: true}`|Pass either `string[]` or `{[package:string]:(boolean|string)}`. Package names are keys, and values are either `true` (exclude), `false` (include), a `string` to replace the package with a specific javascript, or an object depending on mode.
+`excludeGlobals`|`[]`|Type `string[]`. By default no globals are excluded and Meteor exposes many variables on `window`. You can exclude the `global-imports` package altogether through the `exclude` option, or provide a number of packages and/or variables here that you don't want to be exposed globally.
+`logIncludedPackages `|`false`|This is helpful if you want to see the included packages listed in the webpack build output
+`stripPackagesWithoutFiles `|`true`|By settings this option to `true`, all package files are matched to a regex to figure out if they actually contain javascript files. A lot of packages are server only but still result in some client files, revealing both the dependency and some unnecessary lines of javascript. By setting this option to `false` all files will be included.
+`logPackagesWithoutFiles `|`false`|This is helpful if you want to see which packages are being stripped out by `stripPackagesWithoutFiles`
 
-#### config.excludeGlobals
-This controls whether ```global-imports.js``` will be included from Meteor. By default it will not.
-This file exports a lot of global variables such as ```Meteor```, ```Tracker``` etc. on ```window```
 
-Set this config to ```false``` to exports all globals (for packages that aren't excluded) or an array of
- variable names and/or package names that will be exluded from global export.
+#### Autoupdate/Hot Module Reload
+As you may have seen above, Meteor's autoupdate package (or Hot Module Reload, HMR) is disabled by default. This is because
 
+1. During development you probably want to use HMR instead
+2. During production it takes a little work to get it to work and we don't want you to end up with a ever-reloading page
 
-#### config.meteorEnv
+With that said - in order to get it to work with Meteor's Hot Module Reload in production you must
 
-Meteor 1.3 expects to have this property along with a `NODE_ENV` set to `'production'` or nothing (development).
-
-```javascript
-new MeteorImportsPlugin({
-  ...
-  meteorEnv: { NODE_ENV: 'production' }
-})
+- have the `HtmlWebpackPlugin` in your webpack build chain
+- enable the `autoupdate` package (at least in production builds) according to above
+- have the `emitAutoupdateVersion` set to `true` (default)
+- note the built file `autoupdate_version` after each build. This file contains a hash that you need to provide when running Meteor server side. Like this:
 ```
+AUTOUPDATE_VERSION=xxxxxxxxxxxxxxx meteor
+```
+
+The `autoupdate` package then compares this given hash with whatever's in the page. Provided you followed the steps above, they should match, until a new server is deployed and your page thereby reloaded.
+
+Configuration option|Default|Description
+---|---|---|---
+`emitAutoupdateVersion `|`true`|Sets emission of a `autoupdate_version` file to the build output on, as well as injection of the meteor config variable `autoUpdateVersion`. **In order for this to work, the autoupdate package must be enabled**
 
 ## How to import packages
 
-Once you have it configured, you can import any Meteor package in your code. We have followed the same Meteor 1.3 convention, so you have to prepend `meteor` to avoid name collisions with NPM packages.
-
-Each package exports its *Meteor globals* as named properties. In ES5 it looks like this.
-
-```javascript
-// ES5
-var Meteor = require('meteor/meteor').Meteor;
-var Mongo = require('meteor/mongo').Mongo;
-var Tracker = require('meteor/tracker').Tracker;
-var check = require('meteor/check').check;
-var Match = require('meteor/check').Match;
-```
-
-But you'd want to use es2015 for improved imports with destructuring.
-
-```javascript
-// ES2015
-import { Meteor } from 'meteor/meteor';
-import { Mongo } from 'meteor/mongo';
-import { Tracker } from 'meteor/tracker';
-import { check, Match } from 'meteor/check';
-```
+Importing packages work just like they do in Meteor. You can import any package (or included sub-module) in your code. Anything prefixed with "meteor/" will use the Meteor module system. Otherwise they will use the webpack's default resolution. Thus, importing `meteor/underscore` will be different from importing `underscore`. However, importing some modules might return the same actual module. Note that this plugin creates proxy module bridges  (1-liners) for all imported modules to return what Meteor's package system returns.
 
 ## How to add (or remove) a Meteor package
 
@@ -262,9 +254,72 @@ If you want to work with HMR you need to add this to your entry file:
 if (module.hot) module.hot.accept();
 ```
 
-*I am not a HMR expert so if you have a better idea of how to deal with it, let me know. It will be great to avoid reloading all the Meteor code on each change.*
+However, this accepts all code. Reloading code that adds new collections and similar will fail. In these scenarios you will have to decline (or manually reload) the hot update. In order to optimize your dev workflow a bit, you can add the following code to have Meteor's methods and Reload work better with HMR:
+
+```javascript
+import 'meteor-imports';
+const Reload = window.Package.reload.Reload;
+Reload._reload = () => {};
+
+// Make methods work with reload
+const mOrig = Meteor.methods;
+Meteor.methods = function(methods) {
+    for (let m of Object.keys(methods))
+        delete Meteor.connection._methodHandlers[m];
+    mOrig(methods);
+};
+```
+
+## Production builds
+If you want to use this plugins for production builds, you may want Meteor to server the built files. The following webpack config should serve as a good start for such a template:
+
+```js
+module.exports = {
+    mode: 'production',
+    output: {
+        path: path.join(root, 'server/public/wp'),
+        filename: '[name].[hash].js',
+        publicPath: '/wp',
+    },
+    plugins: [
+	   new MeteorImportsWebpackPlugin({
+	   		exclude: {autoupdate: false},
+	   		ddpDefaultConnectionPort: 80
+   		})
+    ]
+};
+```
+
+Server side you'd need the following code:
+
+```js
+WebApp.rawConnectHandlers.use((req, res, next) => {
+    const ext = path.extname(req.url);
+    if (req.method === 'GET' && !ext) {
+        req.url = '/index.html';
+    } else if (ext === '.map') {
+        // Consider preventing access if you want
+    }
+    next();
+})
+```
+
+The idea is then to
+
+1. Run Meteor (possibly with --production)
+2. Build using webpack
+3. Build the Meteor app with the generated webpack content
+4. Possibly running Meteor with environment variable `AUTOUPDATE_VERSION` read from webpack build output
+
+Other things you might want to consider are:
+
+- [ExtractTextPlugin](https://github.com/webpack-contrib/extract-text-webpack-plugin)
+- inclusion of `autoupdate` package (see above)
+- setting cache headers for webpack files
 
 ## Examples
+
+**CAVEAT: The following examples have not been revised (yet) since the 2-3 version upgrade**
 
 Webpack is a powerful but complex tool, with a non-friendly API, so reading code from examples is usually a great way to get you started.
 
@@ -278,11 +333,9 @@ Webpack is a powerful but complex tool, with a non-friendly API, so reading code
 
 ## The bad things
 
-- **Dev servers**: if you add or remove Meteor packages, you have to restart your dev servers, both Webpack and Meteor.
 - **Non used Meteor packages**: when you do `import 'meteor-imports'` all the meteor code is included in your bundle. If you are not using a package, is not enough to just not import it, you have to remove it from meteor: `meteor remove some:package`. This is not new, it's the way Meteor works.
 - **Blaze**: it doesn't work because Blaze requires a spacebars transpiler to convert the html templates into javascript. I am sure a Webpack loader could be created for this, but anyway I recommend you to switch to React (from npm). If you want to try, I suggest you start with the [spacebars compiler](https://github.com/eface2face/meteor-spacebars-compiler) created (and used) by Sergio García (@murillo128).
 - **Blaze related packages**: for the obvious same reasons, these don't work either.
-- **Hot Code Push**: for development you don't need it because the Webpack's Hot Module Replacement is more convenient, but you won't have it for production either. I am sure it won't be hard to make it work so if you need it go ahead: I will accept the PR :)
 - **Cordova**: Meteor cordova doesn't work but real [Cordova](http://cordova.apache.org/) does. The commands are pretty similar so don't worry.
 - **Cordova Hot Code Push**: same here, but don't worry, you can use the excellent [CodePush](http://microsoft.github.io/code-push/) project from Microsoft.
 
