@@ -1,10 +1,7 @@
-const {getFileNameWoExt, logWarn} = require('./utils');
+const {getPackageName, logWarn} = require('./utils');
 
 module.exports = function(source) {
-  const name = getFileNameWoExt(this.resource);
-
-  // Too brittle?
-  const nameWithColon = name.replace(/_/, ':');
+  const nameWithColon = getPackageName(this.resource);
 
   const pkgInternalFileEntry = source.match(/(\/+\s+)+(packages|app)/m);
   if (!pkgInternalFileEntry) {
@@ -12,7 +9,7 @@ module.exports = function(source) {
       return '';
 
     if (this.query.logPackagesWithoutFiles)
-      logWarn('File', name, 'seems to not include any file and can probably be excluded');
+      logWarn('File', this.resource, 'seems to not include any file and can probably be excluded');
   }
 
   return source + '\nmodule.exports = window.Package["' + nameWithColon + '"];\n' +

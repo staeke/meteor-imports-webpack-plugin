@@ -1,5 +1,5 @@
 const path = require('path');
-const {log, logWarn, logError} = require('./utils');
+const {getPackageName, log, logWarn, logError} = require('./utils');
 
 
 function readPackages(callback) {
@@ -18,12 +18,12 @@ function readPackages(callback) {
       .filter(x => x.type === 'js' || x.type === 'css')
       .filter(x => x.path !== 'app/app.js')
       .map(x => {
-        const match = x.path.match(/(packages|app)\/(.+)\.[^.]+$/);
+        const match = x.path.match(/(packages|app)\/(.+)$/);
         if (!match) {
           logError('Unexpected package path in program.json', x.path);
           return null;
         }
-        const name = match[2];
+        const name = getPackageName(match[1]);
         const excludeEntry = config.exclude[name];
         if (excludeEntry === true)
           return null;

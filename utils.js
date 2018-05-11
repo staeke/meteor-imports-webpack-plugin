@@ -1,8 +1,11 @@
 const path = require('path');
 const colors = require('colors/safe');
 
-module.exports = {
+const utils = module.exports = {
   getFileNameWoExt: file => path.basename(file, path.extname(file)),
+
+  // Too brittle?
+  getPackageName: fileName => utils.getFileNameWoExt(fileName).replace(/_/, ':'),
 
   /*eslint-disable */
   log(...args) {
