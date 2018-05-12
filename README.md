@@ -16,7 +16,7 @@ The rest of this page applies to Webpack >= 4, and version `^3.0.0`
 
 
 ## Get started (TL;DR)
-Put your Meteor app in a subfolder called `server`
+Put your Meteor app in a subfolder called `meteor-app`
 
 Install this plugin
 
@@ -31,7 +31,7 @@ const MeteorImportsWebpackPlugin = require('meteor-imports-webpack-plugin');
 ...
 plugins: [
 	new MeteorImportsWebpackPlugin({
-	  meteorFolder: 'server'
+	  meteorFolder: 'meteor-app'
 	})
 ]
 ```
@@ -42,24 +42,24 @@ Then run:
 # Start the webpack-dev-server in one terminal window.
 ./node_modules/.bin/webpack-dev-server # http://localhost:8080
 # And the Meteor server in another.
-cd server && meteor # http://localhost:3000
+cd meteor-app && meteor # http://localhost:3000
 ```
 
 ## How does it work
 
 This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.
 
-If you are going to use a Meteor server, then a good name could be `server`. If not, maybe just `meteor`. We'll stick to `server` for this guide.
+If you are going to use a Meteor server (only), then a good name could be `server`. If not, maybe just `meteor` or `app`. We'll stick to `meteor-app` for this guide.
 
 ```bash
 cd my-project
-meteor create server # create a real meteor project in the `server` folder
+meteor create meteor-app # create a real meteor project in the `meteor-app` folder
 ```
 
 Then you can add or remove packages like you normally do in Meteor. You should remove each module that you don't need to make your bundle as small as possible.
 
 ```bash
-cd server
+cd meteor-app
 meteor remove insecure autopublish blaze-html-templates session jquery es5-shim
 ```
 
@@ -104,15 +104,15 @@ From version 3 of this plugin, this line isn't necessary, as long as you import 
 Typically you don't want Meteor to build your client files, now that you have a webpack setup to deal with that. One way to accomplish this is to create a directory structure with symlinks to only the server parts of your app. Thus we create a separate directory called `wp-server` for that purpose.
 
 ```bash
-# We assume that the meteor app resides in "server"
-mkdir wp-server
-cd wp-server
-ln -s ../server/server
-ln -s ../server/both
-ln -s ../server/imports
-ln -s ../server/public
-ln -s ../server/packages
-ln -s ../server/node_modules
+# We assume that the meteor app resides in "meteor-app"
+mkdir wp-meteor-app
+cd wp-meteor-app
+ln -s ../meteor-app/server
+ln -s ../meteor-app/both
+ln -s ../meteor-app/imports
+ln -s ../meteor-app/public
+ln -s ../meteor-app/packages
+ln -s ../meteor-app/node_modules
 # Possibly more directories
 
 # Then start it like usual with
@@ -121,7 +121,7 @@ meteor
 
 If you run client build tools such as typescript you might also want to separate the `imports` directory in client/both/server and use the same symlinking principle to avoid Meteor building client-only changes.
 
-Note that by still putting your client files in `server/client` or `server/imports/...` you can still be compatible with the Meteor build system when you choose to.
+Note that by still putting your client files in `meteor-app/client` or `meteor-app/imports/...` you can still be compatible with the Meteor build system when you choose to.
 
 ## Configuration options
 
@@ -129,8 +129,8 @@ The `config` object passed to the plugin must contain at least `meteorFolder` (o
 
 ```javascript
 new MeteorImportsPlugin({
-  meteorFolder: 'server',
-  settingsFilePath: 'server/settings.json'
+  meteorFolder: 'meteor-app',
+  settingsFilePath: 'meteor-app/settings.json'
 })
 ```
 
@@ -160,7 +160,7 @@ Certain packages can be excluded. Others can be replaced. By default, the `autou
 
 ```javascript
 new MeteorImportsPlugin({
-    meteorFolder: 'server,
+    meteorFolder: 'meteor-app,
     exclude: {
     	// 'global-imports': true,
     	reload: true,
@@ -177,7 +177,7 @@ However, this is useful only for the core packages. If you don't to use a Meteor
 You can get a list of the currently used packages in your meteor `program.json` file:
 
 ```bash
-cd server/.meteor/local/build/programs/web.browser/
+cd meteor-app/.meteor/local/build/programs/web.browser/
 cat program.json
 ```
 
@@ -221,7 +221,7 @@ Importing packages work just like they do in Meteor. You can import any package 
 First, go to your Meteor folder and add (or remove) the package.
 
 ```bash
-cd server
+cd meteor-app
 meteor add aldeed:collection2
 ```
 
@@ -294,13 +294,13 @@ Meteor.methods = function(methods) {
 ```
 
 ## Production builds
-If you want to use this plugins for production builds, you may want Meteor to server the built files. The following webpack config should serve as a good start for such a template:
+If you want to use this plugins for production builds, you may want Meteor to serve the built files. The following webpack config should serve as a good start for such a configuration:
 
 ```js
 module.exports = {
     mode: 'production',
     output: {
-        path: path.join(root, 'server/public/wp'),
+        path: path.join(root, 'meteor-app/public/wp'),
         filename: '[name].[hash].js',
         publicPath: '/wp',
     },
