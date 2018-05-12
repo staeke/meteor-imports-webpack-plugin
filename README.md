@@ -92,13 +92,36 @@ module.exports = {
 ```
 
 
-And finally, include this import line in your client entry point. 
+And finally, you can include this import line in your client entry point. 
 
 ```javascript
 require('meteor-imports'); // or import 'meteor-imports';
 ```
 
 From version 3 of this plugin, this line isn't necessary, as long as you import anything beginning with "meteor", e.g. `import {Meteor} from "meteor/meteor"`. But in order to better control when Meteor (and packages) load, you can still include that line:
+
+### Avoiding Meteor rebuilding the client
+Typically you don't want Meteor to build your client files, now that you have a webpack setup to deal with that. One way to accomplish this is to create a directory structure with symlinks to only the server parts of your app. Thus we create a separate directory called `wp-server` for that purpose.
+
+```bash
+# We assume that the meteor app resides in "server"
+mkdir wp-server
+cd wp-server
+ln -s ../server/server
+ln -s ../server/both
+ln -s ../server/imports
+ln -s ../server/public
+ln -s ../server/packages
+ln -s ../server/node_modules
+# Possibly more directories
+
+# Then start it like usual with
+meteor
+```
+
+If you run client build tools such as typescript you might also want to separate the `imports` directory in client/both/server and use the same symlinking principle to avoid Meteor building client-only changes.
+
+Note that by still putting your client files in `server/client` or `server/imports/...` you can still be compatible with the Meteor build system when you choose to.
 
 ## Configuration options
 
