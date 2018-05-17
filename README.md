@@ -47,7 +47,7 @@ cd meteor-app && meteor # http://localhost:3000
 
 ## How does it work
 
-This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.
+This plugin extracts the meteor packages from a **real meteor project**, which lives in a subfolder.  Your top-level project directory must *not* be a meteor project (that is, it should not contain a `.meteor` directory).
 
 If you are going to use a Meteor server (only), then a good name could be `server`. If not, maybe just `meteor` or `app`. We'll stick to `meteor-app` for this guide.
 
