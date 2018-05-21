@@ -64,7 +64,7 @@ module.exports = function(/*source*/) {
     // Require all packages
     for (let pkg of packages) {
       if (pkg.source)
-        output += 'window.Package["' + pkg.name + '"] = ' + pkg.source + ';\n';
+        output += 'Package._define("' + pkg.name + '", ' + pkg.source + ');\n';
       else
         output += 'require("' + path.join(meteorBuild, pkg.path) + '");\n';
     }
