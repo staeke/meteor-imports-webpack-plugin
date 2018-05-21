@@ -28,8 +28,8 @@ function getSource(config, publicSettings) {
   output += `Object.assign(config, ${jsonConfig});\n`;
   if (!config.DDP_DEFAULT_CONNECTION_URL) {
     const port = config.ddpDefaultConnectionPort;
-    let portPart = (!port || port === 80) ? '' : ' + ":' + port + '"';
-    output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "//" + window.location.hostname' + portPart + ';\n';
+    const portPart = port || 'window.location.port';
+    output += 'config.DDP_DEFAULT_CONNECTION_URL = window.location.protocol + "//" + window.location.hostname + ":" + ' + portPart + ';\n';
   }
   if (!config.ROOT_URL) {
     output += 'config.ROOT_URL = window.location.protocol + "//" + window.location.host;\n';
