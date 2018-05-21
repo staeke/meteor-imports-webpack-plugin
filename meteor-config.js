@@ -13,6 +13,7 @@ function getSource(config, publicSettings) {
     'ddpDefaultConnectionPort',
     'emitAutoupdateVersion',
     'exclude',
+    'excludeGlobals',
     'injectMeteorRuntimeConfig',
     'logIncludedPackages',
     'logPackagesWithoutFiles',
