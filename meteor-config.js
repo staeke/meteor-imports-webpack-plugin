@@ -23,8 +23,7 @@ function getSource(config, publicSettings) {
     'stripPackagesWithoutFiles'
   );
 
-  if (publicSettings)
-    clientConfig.PUBLIC_SETTINGS = publicSettings;
+  clientConfig.PUBLIC_SETTINGS = publicSettings || clientConfig.PUBLIC_SETTINGS || {};
   const jsonConfig = JSON.stringify(clientConfig);
   output += `Object.assign(config, ${jsonConfig});\n`;
   if (!config.DDP_DEFAULT_CONNECTION_URL) {
