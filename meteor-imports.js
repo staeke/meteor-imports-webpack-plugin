@@ -23,7 +23,7 @@ function readPackages(callback) {
           logError('Unexpected package path in program.json', x.path);
           return null;
         }
-        const name = getPackageName(match[1]);
+        const name = getPackageName(match[2]);
         const excludeEntry = config.exclude[name];
         if (excludeEntry === true)
           return null;
