@@ -20,7 +20,9 @@ function arrToPathForRegEx(arr) {
 }
 
 const BUILD_PATH_PARTS = ['.meteor', 'local', 'build', 'programs', 'web.browser'];
-const PACKAGES_PATH_PARTS = BUILD_PATH_PARTS.concat(['packages']);
+
+// Note that these can vary between meteorProgramFolders and meteorFolder builds
+const PACKAGES_PATH_PARTS = ['programs', 'web.browser', 'packages'];
 const PACKAGES_REGEX_NOT_MODULES = new RegExp(
   arrToPathForRegEx(PACKAGES_PATH_PARTS) +
   '\\/(?!modules\\.js)[^/\\\\]+$'
@@ -59,6 +61,7 @@ class MeteorImportsPlugin {
 
       // We don't want webpack's parsing of meteor packages (except modules) since they're using Meteor's package system
       nmf.hooks.createModule.tap(PLUGIN_NAME, result => {
+        // TODO: Investigate if we can split this to e.g. startWith(meteorBuild) and match packages
         if (result.userRequest.match(PACKAGES_REGEX_NOT_MODULES))
           return new MeteorPackageModule(result);
       });
