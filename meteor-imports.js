@@ -18,12 +18,14 @@ function readPackages(callback) {
       .filter(x => x.type === 'js' || x.type === 'css')
       .filter(x => x.path !== 'app/app.js')
       .map(x => {
-        const match = x.path.match(/(packages|app)\/(.+)$/);
+        // NOTE: global-imports ends up under "app/"
+        // css ends up in merged-stylesheets.css (no subdir)
+        const match = x.path.match(/(?:(?:packages|app)\/)?(.+)$/);
         if (!match) {
           logError('Unexpected package path in program.json', x.path);
           return null;
         }
-        const name = getPackageName(match[2]);
+        const name = getPackageName(match[1]);
         const excludeEntry = config.exclude[name];
         if (excludeEntry === true)
           return null;
