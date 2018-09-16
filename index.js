@@ -119,7 +119,7 @@ class MeteorImportsPlugin {
 
     const isDevServer = !!process.argv.find(v => v.includes('webpack-dev-server'));
     if (exclude.autoupdate === false && isDevServer) {
-      logWarn('You have specified using autoupdate: true while running webpack-dev-server. ' +
+      logWarn('You have specified using autoupdate: false while running webpack-dev-server. ' +
         'This typically leads to an ever reloading page if you don\'t start/stop meteor all ' +
         'the time and provide environment variable AUTOUPDATE_VERSION. ' +
         'Are you sure this is what you want to do?');
