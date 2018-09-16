@@ -17,8 +17,7 @@
     "plugin",
     "import",
     "packages",
-    "imports",
-    "npm"
+    "imports"
   ],
   "author": "Luis Herranz <luisherranz@gmail.com> (https://github.com/luisherranz)",
   "license": "MIT",
