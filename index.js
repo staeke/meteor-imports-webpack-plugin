@@ -250,9 +250,11 @@ class MeteorImportsPlugin {
           // Also kick off an async write to the output file
           let outputPath = compiler.options.output.path;
           const outputFile = path.join(outputPath, 'autoupdate_version');
-          fs.writeFile(outputFile, hash, err => {
-            if (err) logError('Unable to write autoupdate_version file', err);
-            else log('Wrote autoupdate_version file to ', outputFile);
+          fs.mkdir(path.dirname(outputFile), () => {
+            fs.writeFile(outputFile, hash, err => {
+              if (err) logError('Unable to write autoupdate_version file', err);
+              else log('Wrote autoupdate_version file to ', outputFile);
+            });
           });
         });
       });
