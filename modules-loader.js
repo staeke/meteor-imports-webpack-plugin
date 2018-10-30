@@ -1,5 +1,5 @@
 const reRequire = /([^\w.])require([^\w])/g;
-const reNpmModules = /^\/+$\s+\/\/\s*\/\/\s*\/\/\s*node_modules\/(?!meteor[/-])([^\s]*)\.js[\s/]*?^\/+$(.|\s)*?^\/+$/gm;
+const reNpmModules = /^\/+$\s+\/\/\s*\/\/\s*\/\/\s*node_modules\/(?!meteor[/-])([^\s]*)\.js[\s/]*?^\/+$(.|\s)*?^\/+$\s^$\s(?=})/gm;
 
 module.exports = function(source) {
 
