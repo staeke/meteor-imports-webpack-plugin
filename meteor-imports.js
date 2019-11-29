@@ -68,7 +68,7 @@ module.exports = function(/*source*/) {
       if (pkg.source)
         output += 'Package._define("' + pkg.name + '", ' + pkg.source + ');\n';
       else
-        output += 'require("' + path.join(meteorBuild, pkg.path) + '");\n';
+        output += 'require(' + JSON.stringify(path.join(meteorBuild, pkg.path)) + ');\n';
     }
 
     output += 'var mr = Package["modules-runtime"];\n';
